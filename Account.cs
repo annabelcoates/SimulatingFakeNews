@@ -19,7 +19,8 @@ namespace ModelAttemptWPF
 
         public double freqUse; // The % likelihood that a user is online in a single 12 hour block
         public List<Post> page= new List<Post>(); // A list of posts this account has shared
-        public List<Post> feed= new List<Post>(); // A list of posts that the account sees
+        public List<Post> feed= new List<Post>(); // A list of posts that the account's follows have shared
+        public List<News> seen = new List<News>(); // a list of all the posts the user has seen
         private Random random= new Random();
         private int staticTime = 0; // temp variable to handle time
         public Account(MainWindow window,OSN osn, string name, double freqUse)
@@ -49,7 +50,7 @@ namespace ModelAttemptWPF
         { 
             // can only be called by CreateFakeNews(), CreateTrueNews() and ViewFeed()
                 Post newPost = new Post(news, hourOfDay,this);
-                page.Add(newPost);
+                this.page.Add(newPost);
         }
 
         public void ViewFeed()
@@ -58,9 +59,19 @@ namespace ModelAttemptWPF
             {
                 foreach( Post post in account.page)
                 {
-                    if (random.Next(101) < freqUse)
+                    Console.WriteLine(post.news.ID + " is viewed by "+this.name+" on "+account.name+"'s page, has seen: "+ post.news.HasSeen(this));
+                    // TODO: Maybe put all the viewing logic into a function
+                    post.totalViews++;
+                    post.news.totalViews++;
+                    if (post.news.HasSeen(this)==false)
                     {
-                        ShareNews(post.news, staticTime);
+                        post.news.viewers.Add(this);
+                        this.seen.Add(post.news);
+                    }
+                    if (random.NextDouble() < freqUse & (this.HasPosted(post.news)==false)) // TODO: some way of determining if it's on the page already
+                    {
+                        Console.WriteLine(this.name + " shared the news");
+                        this.ShareNews(post.news, 0);
                     }
                 }
             }
@@ -78,6 +89,23 @@ namespace ModelAttemptWPF
         {
             followingAccount.followers.Add(this);
             this.following.Add(followingAccount);
+        }
+
+        public bool HasSeen(News news)
+        {
+            return this.seen.Contains(news);
+        }
+
+        public bool HasPosted(News news)
+        {
+            foreach(Post post in this.page)
+            {
+                if (post.news.ID == news.ID)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
