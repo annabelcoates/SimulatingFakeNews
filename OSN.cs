@@ -18,6 +18,12 @@ namespace ModelAttemptWPF
         };
         public Random random = new Random();
 
+        // Statistics
+        public int nSharedFakeNews = 0;
+        int nSeenFakeNews = 0;
+
+
+
         public OSN(MainWindow window)
         {
             this.window = window;
@@ -42,8 +48,11 @@ namespace ModelAttemptWPF
         {
             for (int i = 0; i < numberOfUsers; i++)
             {
+                Console.WriteLine(i);
+                // if theres two people of the same name it doesn't matter
                 string name = nameList[random.Next(nameList.Count)];
-                Account newAccount = this.NewAccount(name,random.NextDouble());
+                Console.WriteLine(name);
+                Account newAccount = this.NewAccount(name,0.5);
             }
         }
 
@@ -53,7 +62,7 @@ namespace ModelAttemptWPF
             {
                 // random number of connections between 0 and everyone
                 int nConnections = random.Next(this.IDCount/2);
-                Console.WriteLine("n connections selected: " + nConnections);
+
                 List<int> connectionIDS = new List<int>();
                 bool connectionsNotFound = true;
 
@@ -70,15 +79,86 @@ namespace ModelAttemptWPF
                         }
                     }
                 }
-                Console.WriteLine("actual follows made: " + connectionIDS.Count);
             }
+        }
+
+        public void CreateRandomFollow()
+        {
+            List<Account> validFollowers = new List<Account>();
+            foreach(Account account in accountList)
+            {
+                if (account.followers.Count != accountList.Count - 1)
+                {
+                    validFollowers.Add(account);
+                }
+            }
+            if (validFollowers.Count != 0)
+            {
+                int followerID = random.Next(validFollowers.Count);
+                int followeeID = 0;
+                bool validID = false;
+                while (validID == false)
+                {
+                    followeeID = random.Next(this.IDCount);
+                    validID = true;
+                    foreach (Account existingFollower in this.accountList[followeeID].followers)
+                    {
+                        if (followerID == existingFollower.ID | followerID == followeeID)
+                        {
+                            validID = false;
+                        }
+                    }
+                }
+                validFollowers[followerID].Follow(accountList[followeeID]);
+            }
+            
         }
 
         public void GrowConnections()
         {
 
         }
+
+        public void ShareNews(News news, Account poster)
+        {
+            Post post = new Post(news, 0, poster);
+            poster.page.Add(post);
+            if (news.isTrue == false)
+            {
+                this.nSharedFakeNews++;
+            }
+        }
+
+        public News CreateNews(string ID, bool isTrue, Account poster)
+        {
+            News news = new News(ID, isTrue);
+            this.ShareNews(news, poster); 
+            return news;
+        }
         
+        public void ViewFeed(Account account)
+        {
+            foreach (Account followee in account.following)
+            {
+                foreach (Post post in followee.page)
+                {
+                   // Console.WriteLine(post.news.ID + " is viewed by " + account.name + " from " + followee.name + "'s post, has seen: " + post.news.HasSeen(account));
+                    // TODO: Maybe put all the viewing logic into a function
+                    post.totalViews++;
+                    post.news.totalViews++;
+                    if (post.news.HasSeen(account) == false)
+                    {
+                        post.news.viewers.Add(account);
+                        account.seen.Add(post.news);
+                    }
+                    if (random.NextDouble() < account.freqUse & (account.HasPosted(post.news) == false)) // TODO: some way of determining if it's on the page already
+                    {
+                        Console.WriteLine(account.name + " shared the news");
+                        this.ShareNews(post.news,account);
+                    }
+                }
+            }
+        }
     }
 }
 

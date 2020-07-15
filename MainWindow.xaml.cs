@@ -28,39 +28,61 @@ namespace ModelAttemptWPF
         };
         public DispatcherTimer Clock { get; set; } = new DispatcherTimer();
         public Account myAccount;
+        OSN twitter;
         public MainWindow()
         {
-            Clock.Interval = TimeSpan.FromMilliseconds(500f);
+            Clock.Interval = TimeSpan.FromMilliseconds(100f);
             Clock.Tick += Update;
             InitializeComponent();
             Clock.Start();
 
-            OSN twitter = new OSN(this);
-            twitter.Populate(50);
-            Account tedsAccount = twitter.NewAccount("Ted Cruz", 1.0);// change to decimal;
-            twitter.CreateRandomFollows();
-            News tedsFakeNews = new News("FakeNews1", false);
-            News tedsRealNews = new News("RealNews1", true);
-            tedsAccount.CreateFakeNews("FakeNews1",0);
-            tedsAccount.CreateTrueNews("RealNews1", 0);
-            tedsAccount.ViewFeed();
-            foreach (Account account in twitter.accountList)
-            {
-                 account.ViewFeed();
+            // Button press functions
+            this.populateButton.Click += PopulateClicked;
+            this.twitter = new OSN(this);
+
+            // Give twitter a small initial population
+            this.twitter.Populate(15);
             }
-            Console.WriteLine("number of ted's followers: "+tedsAccount.followers.Count);
-            Console.WriteLine("number of people on fb: " + twitter.IDCount);
-            foreach( Account account in twitter.accountList)
-            {
-                Console.WriteLine("name: " + account.name + " n followers: " + account.followers.Count + " n following: " + account.following.Count);
-            }
-            DisplayOSN(twitter);
-            tedsAccount.OutputPage();
-            }
+
+
         private void Update(object sender, EventArgs e)
         {
-            this.date.Content = DateTime.Now;
+            this.date.Content = DateTime.Now.ToLongTimeString();
+            if (this.createFollowsCheckbox.IsChecked==true)
+            {
+                this.twitter.CreateRandomFollow();
+            }
+            foreach( Account account in twitter.accountList)
+            {
+                twitter.ViewFeed(account);
+                DisplayOSN(twitter);
+            }
         }
+
+        private void PopulateClicked(object sender, EventArgs e)
+        {
+            this.twitter.Populate(50);
+            Account tedsAccount = twitter.NewAccount("Ted Cruz", 1.0);// change to decimal;
+
+            //News tedsFakeNews = new News("FakeNews1", false);
+            //News tedsRealNews = new News("RealNews1", true);
+            //tedsAccount.CreateFakeNews("FakeNews1", 0);
+            //tedsAccount.CreateTrueNews("RealNews1", 0);
+            //tedsAccount.ViewFeed();
+            //foreach (Account account in twitter.accountList)
+            //{
+            //    account.ViewFeed();
+            //}
+
+            //DisplayOSN(twitter);
+            //tedsAccount.OutputPage();
+        }
+
+        private void CreateFollowsClicked(object sender, EventArgs e)
+        {
+            this.twitter.CreateRandomFollows();
+        }
+
         public void PrepareOSNGrid(OSN osn)
         {
             // Makes the GUI OSN grid big enough for all the accounts in the OSN
@@ -78,6 +100,7 @@ namespace ModelAttemptWPF
 
             }
         }
+
         public void AddGUIAccount(Account account)
         {
             int n = OSNGrid.RowDefinitions.Count;
@@ -126,7 +149,7 @@ namespace ModelAttemptWPF
         public void AddConnection(int row1, int col1, int row2, int col2, double squareWidth)
         {
             Line connector = new Line();
-            connector.Stroke = PickRandomBrush(random);
+            connector.Stroke = new SolidColorBrush(Colors.LightGreen);
             connector.X1 = (col1 + 0.1) * squareWidth;
             connector.Y1 = (row1 + 0.1) * squareWidth;
             connector.X2 = (col2 + 0.1) * squareWidth;
@@ -141,8 +164,8 @@ namespace ModelAttemptWPF
             // TODO: make it so that the circle goes in a different place for the second piece of news etc and so that real news is displayed differently
             
             Ellipse newsCircle = new Ellipse();
-            newsCircle.Width = 10;
-            newsCircle.Height = 10;
+            newsCircle.Width = 5 * news.viewers.Count;
+            newsCircle.Height = 5 * news.viewers.Count;
             if (news.isTrue)
             {
                 newsCircle.Fill = new SolidColorBrush(Colors.LawnGreen);
@@ -159,6 +182,9 @@ namespace ModelAttemptWPF
 
         public void DisplayOSN(OSN osn)
         {
+            this.OSNGrid.Children.Clear();// will remove all child controls nested in the grid. 
+            this.OSNGrid.RowDefinitions.Clear();// will remove all row definitions.
+            this.OSNGrid.ColumnDefinitions.Clear();
             this.PrepareOSNGrid(osn);
             foreach(Account account in osn.accountList)
             {
@@ -177,5 +203,17 @@ namespace ModelAttemptWPF
             return result;
         }
 
+        private void CreateFakeNewsButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.twitter.accountList[random.Next(this.twitter.IDCount)].CreateFakeNews("NewFakeNews", 0);
+        }
+        private void CreateTrueNewsButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.twitter.accountList[random.Next(this.twitter.IDCount)].CreateTrueNews("NewTrueNews", 0);
+        }
+        private void OutputButton_Click(object sender, RoutedEventArgs e)
+        {
+            Console.WriteLine("Time: " + Clock.ToString() + ", N shared fake news: " + twitter.nSharedFakeNews);
+        }
     }
 }

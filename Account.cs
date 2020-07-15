@@ -41,7 +41,7 @@ namespace ModelAttemptWPF
         // Could make these one function?
         public News CreateTrueNews(string ID, int hourOfDay)
         {
-            News news = new News(ID, false);
+            News news = new News(ID, true);
             ShareNews(news, hourOfDay);
             return news;
         }
@@ -59,7 +59,7 @@ namespace ModelAttemptWPF
             {
                 foreach( Post post in account.page)
                 {
-                    Console.WriteLine(post.news.ID + " is viewed by "+this.name+" on "+account.name+"'s page, has seen: "+ post.news.HasSeen(this));
+                    Console.WriteLine(post.news.ID + " is viewed by "+this.name+" from "+account.name+"'s post, has seen: "+ post.news.HasSeen(this));
                     // TODO: Maybe put all the viewing logic into a function
                     post.totalViews++;
                     post.news.totalViews++;
