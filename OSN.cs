@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using Microsoft.Data.Analysis;
 namespace ModelAttemptWPF
 {
@@ -8,7 +10,10 @@ namespace ModelAttemptWPF
     {
         private readonly MainWindow window; //Maybe this should be public and just the osn as a whole can be passed to the new Account() method
 
-        public bool[,] followArray =new bool[,] { };
+        private Process process = null; // for python connection
+        private string graphLocation=@"C:/Users/Anni/Documents/Uni/Computer Science/Proj/wheel_graph.csv";
+
+        public bool[,] followArray = new bool[,] { };
         public DataFrame followDF = new DataFrame();
         public List<Account> accountList = new List<Account>();
         public int IDCount = 0;
@@ -21,7 +26,7 @@ namespace ModelAttemptWPF
         // Statistics
         public int nSharedFakeNews = 0;
         int nSeenFakeNews = 0;
-
+        
 
 
         public OSN(MainWindow window)
@@ -29,7 +34,7 @@ namespace ModelAttemptWPF
             this.window = window;
         }
 
-        public Account NewAccount(string name,double freqUse)
+        public Account NewAccount(string name, double freqUse)
         {
             Account newAccount = new Account(this.window, this, name, freqUse);
             IDCount++;
@@ -37,42 +42,55 @@ namespace ModelAttemptWPF
             return newAccount;
         }
 
-        public void Follow(Account follower, Account beingFollowedAccount)
+        public void Follow(Account follower, Account followee)
         {
-            this.followArray[follower.ID, beingFollowedAccount.ID] = true;
-            follower.following.Add(beingFollowedAccount);
-            beingFollowedAccount.followers.Add(follower);
+           // this.followArray[follower.ID, beingFollowedAccount.ID] = true;
+            follower.following.Add(followee);
+            followee.followers.Add(follower);
         }
 
-        public void Populate(int numberOfUsers)
+        public void IncreasePopulation(int numberOfUsers)
         {
             for (int i = 0; i < numberOfUsers; i++)
             {
-                Console.WriteLine(i);
                 // if theres two people of the same name it doesn't matter
                 string name = nameList[random.Next(nameList.Count)];
-                Console.WriteLine(name);
-                Account newAccount = this.NewAccount(name,0.5);
+                Account newAccount = this.NewAccount(name, random.NextDouble());
             }
         }
 
+        public void PopulateFromGraph(int n)
+        {
+            // Create n accounts
+            Console.WriteLine("ID Count before increase:" + this.IDCount);
+
+            this.IncreasePopulation(n);
+            // Get python to make a graph for n people and write the connections to a csv
+            this.CreateGraphCSV(this.IDCount.ToString());
+            // Create follows from the connections in the csv file
+            Console.WriteLine("ID Count after increase:" + this.IDCount);
+            this.CreateFollowsFromGraph(this.graphLocation);
+        }
+        
+
         public void CreateRandomFollows()
         {
-            foreach(Account account in accountList)
+            foreach (Account account in accountList)
             {
                 // random number of connections between 0 and everyone
-                int nConnections = random.Next(this.IDCount/2);
+                int nConnections = random.Next(this.IDCount / 2);
 
                 List<int> connectionIDS = new List<int>();
                 bool connectionsNotFound = true;
 
-                for(int i =0; i < nConnections; i++)
+                for (int i = 0; i < nConnections; i++)
                 {
                     connectionsNotFound = true;
                     while (connectionsNotFound)
                     {
                         int randomID = random.Next(0, IDCount);
-                        if ((randomID!=account.ID) & (connectionIDS.Contains(randomID) == false)){
+                        if ((randomID != account.ID) & (connectionIDS.Contains(randomID) == false))
+                        {
                             connectionIDS.Add(randomID); // use the list to keep track of who has already been followed
                             account.Follow(accountList[randomID]);
                             connectionsNotFound = false;
@@ -85,7 +103,7 @@ namespace ModelAttemptWPF
         public void CreateRandomFollow()
         {
             List<Account> validFollowers = new List<Account>();
-            foreach(Account account in accountList)
+            foreach (Account account in accountList)
             {
                 if (account.followers.Count != accountList.Count - 1)
                 {
@@ -110,12 +128,8 @@ namespace ModelAttemptWPF
                     }
                 }
                 validFollowers[followerID].Follow(accountList[followeeID]);
+                this.Follow(this.accountList[followerID], this.accountList[followeeID]);
             }
-            
-        }
-
-        public void GrowConnections()
-        {
 
         }
 
@@ -132,32 +146,98 @@ namespace ModelAttemptWPF
         public News CreateNews(string ID, bool isTrue, Account poster)
         {
             News news = new News(ID, isTrue);
-            this.ShareNews(news, poster); 
+            this.ShareNews(news, poster);
             return news;
         }
-        
+
         public void ViewFeed(Account account)
         {
             foreach (Account followee in account.following)
             {
                 foreach (Post post in followee.page)
                 {
-                   // Console.WriteLine(post.news.ID + " is viewed by " + account.name + " from " + followee.name + "'s post, has seen: " + post.news.HasSeen(account));
+                    // Console.WriteLine(post.news.ID + " is viewed by " + account.name + " from " + followee.name + "'s post, has seen: " + post.news.HasSeen(account));
                     // TODO: Maybe put all the viewing logic into a function
                     post.totalViews++;
                     post.news.totalViews++;
+                    if (random.NextDouble() < account.freqUse & account.HasPosted(post.news) == false & account.HasSeen(post.news)==false)
+                    {
+                        Console.WriteLine(account.name + " shared the news");
+                        this.ShareNews(post.news, account);
+                    }
                     if (post.news.HasSeen(account) == false)
                     {
                         post.news.viewers.Add(account);
                         account.seen.Add(post.news);
                     }
-                    if (random.NextDouble() < account.freqUse & (account.HasPosted(post.news) == false)) // TODO: some way of determining if it's on the page already
-                    {
-                        Console.WriteLine(account.name + " shared the news");
-                        this.ShareNews(post.news,account);
-                    }
                 }
             }
+        }
+
+        private List<string[]> LoadCsvFile(string filePath)
+        {
+            var reader = new StreamReader(File.OpenRead(filePath));
+            List<string[]> searchList = new List<string[]>();
+            while (!reader.EndOfStream)
+            {
+                string line = reader.ReadLine(); // ignore the line of labels
+                if (line!= ",source,target")
+                {
+                    char[] seperator = new char[] { ',' };
+                    string[] lineList = line.Split(seperator);
+                    searchList.Add(lineList);
+                }
+            }
+            return searchList;
+                       
+        }
+
+        private void CreateGraphCSV(string n)
+        {
+            Console.WriteLine("In createGraphCSV: " + n);
+            process = new Process();
+            process.StartInfo.WorkingDirectory = @"C:\Users\Anni\PycharmProjects\NetworkGraphs";
+            process.OutputDataReceived += (sender, e) => Console.WriteLine($"Recieved:\t{e.Data}");
+            process.ErrorDataReceived += (sender, e) => Console.WriteLine($"ERROR:\t {e.Data}");
+            process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.RedirectStandardError = true;
+            process.StartInfo.UseShellExecute = false;
+
+            process.StartInfo.FileName = @"C:\Users\Anni\AppData\Local\Programs\Python\Python37\python.exe";
+            /// python exe @"C:\Users\Anni\PycharmProjects\NetworkGraphs\tester_wheel_graph.py";
+            process.StartInfo.Arguments = "tester_wheel_graph.py --n " + n;
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            process.WaitForExit();
+        }
+
+
+        public void CreateFollowsFromGraph(string filePath)
+        {
+            List<string[]> connections = LoadCsvFile(filePath);
+            foreach( string[] connection in connections)
+            {
+                // string[0] is the key and isn't necesary
+                //Console.WriteLine("connection line:" + connection[0] + " " + connection[1] + " " + connection[2]);
+                int followerID = Convert.ToInt16(connection[1]);
+                int followeeID = Convert.ToInt16(connection[2]);
+                this.Follow(accountList[followeeID], accountList[followerID]);
+            }
+        }
+
+        public void TimeSlotPasses()
+        {
+            // Determine which users will check their news feed in this time slot
+            double randomDouble = random.NextDouble();
+            foreach(Account user in accountList)
+            {
+                if (user.freqUse > randomDouble)
+                {
+                    user.ViewFeed();
+                }
+            }
+
         }
     }
 }
