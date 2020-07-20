@@ -34,9 +34,9 @@ namespace ModelAttemptWPF
             this.window = window;
         }
 
-        public Account NewAccount(string name, double freqUse)
+        public Account NewAccount(Person person)
         {
-            Account newAccount = new Account(this.window, this, name, freqUse);
+            Account newAccount = new Account(this.window, this, person);
             IDCount++;
             accountList.Add(newAccount);
             return newAccount;
@@ -55,7 +55,8 @@ namespace ModelAttemptWPF
             {
                 // if theres two people of the same name it doesn't matter
                 string name = nameList[random.Next(nameList.Count)];
-                Account newAccount = this.NewAccount(name, random.NextDouble());
+                Person newPerson = new Person(name, 0.5, 0.5, 0.5, 0.5, 0.5);
+                Account newAccount = this.NewAccount(newPerson);
             }
         }
 
@@ -156,13 +157,13 @@ namespace ModelAttemptWPF
             {
                 foreach (Post post in followee.page)
                 {
-                    // Console.WriteLine(post.news.ID + " is viewed by " + account.name + " from " + followee.name + "'s post, has seen: " + post.news.HasSeen(account));
+                    // Console.WriteLine(post.news.ID + " is viewed by " + account.person.name + " from " + followee.person.name + "'s post, has seen: " + post.news.HasSeen(account));
                     // TODO: Maybe put all the viewing logic into a function
                     post.totalViews++;
                     post.news.totalViews++;
-                    if (random.NextDouble() < account.freqUse & account.HasPosted(post.news) == false & account.HasSeen(post.news)==false)
+                    if (random.NextDouble() < account.person.freqUse & account.HasPosted(post.news) == false & account.HasSeen(post.news)==false)
                     {
-                        Console.WriteLine(account.name + " shared the news");
+                        Console.WriteLine(account.person.name + " shared the news");
                         this.ShareNews(post.news, account);
                     }
                     if (post.news.HasSeen(account) == false)
@@ -232,7 +233,7 @@ namespace ModelAttemptWPF
             double randomDouble = random.NextDouble();
             foreach(Account user in accountList)
             {
-                if (user.freqUse > randomDouble)
+                if (user.person.freqUse > randomDouble)
                 {
                     user.ViewFeed();
                 }

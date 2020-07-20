@@ -13,23 +13,23 @@ namespace ModelAttemptWPF
         private readonly MainWindow window;
         public OSN osn;
         public int ID;
-        public string name; // An ID to identify the account
         public List<Account> following=new List<Account>(); // A list of all the accounts this account follows
         public List<Account> followers=new List<Account>();
 
-        public double freqUse; // The % likelihood that a user is online in a single 12 hour block
         public List<Post> page= new List<Post>(); // A list of posts this account has shared
         public List<Post> feed= new List<Post>(); // A list of posts that the account's follows have shared
         public List<News> seen = new List<News>(); // a list of all the posts the user has seen
         private Random random= new Random();
         private int staticTime = 0; // temp variable to handle time
-        public Account(MainWindow window,OSN osn, string name, double freqUse)
+
+        public Person person;
+
+        public Account(MainWindow window,OSN osn, Person person)
         {
             this.osn = osn;
             this.ID = osn.IDCount;
             this.window = window;
-            this.name = name;
-            this.freqUse = freqUse;
+            this.person = person;
         }
 
         public News CreateFakeNews(string ID, int hourOfDay)
@@ -59,7 +59,7 @@ namespace ModelAttemptWPF
             {
                 foreach( Post post in account.page)
                 {
-                    //Console.WriteLine(post.news.ID + " is viewed by "+this.name+" from "+account.name+"'s post, has seen: "+ post.news.HasSeen(this));
+                    //Console.WriteLine(post.news.ID + " is viewed by "+this.person.name+" from "+account.person.name+"'s post, has seen: "+ post.news.HasSeen(this));
                     // TODO: Maybe put all the viewing logic into a function
                     post.totalViews++;
                     post.news.totalViews++;
@@ -68,9 +68,9 @@ namespace ModelAttemptWPF
                         post.news.viewers.Add(this);
                         this.seen.Add(post.news);
                     }
-                    if (random.NextDouble() < freqUse & (this.HasPosted(post.news)==false)) // TODO: some way of determining if it's on the page already
+                    if (random.NextDouble() < person.freqUse & (this.HasPosted(post.news)==false)) // TODO: some way of determining if it's on the page already
                     {
-                        Console.WriteLine(this.name + " shared the news");
+                        Console.WriteLine(this.person.name + " shared the news");
                         this.ShareNews(post.news, 0);
                     }
                 }
@@ -78,7 +78,7 @@ namespace ModelAttemptWPF
         }
         public void OutputPage()
         {
-                this.window.GUIAccount.Content = this.name + "'s Page \n";
+                this.window.GUIAccount.Content = this.person.name + "'s Page \n";
                 foreach(Post post in this.page)
                 {
                     this.window.GUIAccount.Content += "post:"+post.news.ID +"\n";
