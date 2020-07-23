@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ModelAttemptWPF;
+using System;
 
 public class Person
 {
@@ -9,30 +10,39 @@ public class Person
     public double a; // Agreeableness
     public double n; // Neuroticism
 
+   
+
     public double freqUse; // A measure of how likely a user is to check social media in a 15 min timeslot, 0-1
-    public double sessionLength; // A measure of how many posts a person sees in 1 view of their feed, 0-1
+    public double sessionLength; // A measure of how many posts a person sees in 1 view of their feed, 0-1, Maybe should be int?
     public double largeNetwork; // A measure of how likely someone is to have a large network group, 0-1
 
     public double emotionalState; // Represents how emotional someone feels, 0-1
+    public double politicalLeaning; // 0 represents 'the left', 1 represents 'the right'
+    public double onlineLiteracy; // how likely someone is to believe fake news
+    public double sharingFreq;
 
     public string name;
-    public Person(string name,double o, double c, double e, double a, double n)
+
+    public Random random = new Random();
+    public Person(string name,double o, double c, double e, double a, double n, double politicalLeaning, double onlineLiteracy)
 	{
         this.name = name;
+        // Make these normalised?
         this.o = o;
         this.c = c;
         this.e = e;
         this.a = a;
         this.n = n;
 
-        emotionalState = 0.5; // emotional state starts average
+        this.politicalLeaning = politicalLeaning;
+        this.onlineLiteracy = onlineLiteracy;
+
+        this.emotionalState = 0.5; // emotional state starts average
         this.DetermineBehaviours(); // set the behavioural parameters based on the personality traits
 	}
 
     public void DetermineBehaviours()
     {
-        // This would really lend itself to fuzzy logic
-
         // Behaviours based on findings from Caci et al. 2014 and Amichai-Hamburger & Vinitzsky 2010
 
         // neuroticism --> frequent use, conscientiousness --> infrequent use (Caci) 
@@ -44,5 +54,34 @@ public class Person
         // extraversion --> larger network (Caci)
         // conscientiousness --> larger network (AH&V)
         this.largeNetwork = Math.Min(1, this.e + this.c); // sum the e and the c, but cannot be greater than 1
+
+        // research on likelihood of sharing needed
+        this.sharingFreq = this.e;
+    }
+
+    public bool WillShare(News news)
+    {
+        // for now 50% chance
+        return (random.NextDouble() < 0.5);
+    }
+
+    public double AssesNews(News news)
+    {
+        // Currently the news is assessed according to 3 factors equally, politics, emotional level and believability
+
+        // political factor is higher if the political leanings are closer
+        double politicalFactor = 1 - Math.Abs(news.politicalLeaning - this.politicalLeaning);
+
+        // how much the news appeals emotionally increases with the person's emotional level and how emotional the news is
+        double emotionalFactor = Math.Min(1, this.emotionalState + news.emotionalLevel);
+
+        // The perceived believability is dependent on the believability of the article and the person's online literacy
+        double believabilityFactor = Math.Min(1, news.believability / 2*this.onlineLiteracy);
+
+        double shareProb = this.sharingFreq * (politicalFactor + emotionalFactor + believabilityFactor) / 3;
+        Console.WriteLine(this.name+" probability of sharing "+news.name+": " + shareProb);
+        // return the likelihood that someone will share the news
+        return shareProb;
+
     }
 }

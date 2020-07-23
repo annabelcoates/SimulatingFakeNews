@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:ModelAttemptWPF"
         xmlns:oxy="http://oxyplot.org/wpf"
         mc:Ignorable="d"
-        Title="MainWindow" Height="804.5" Width="1216">
+        Title="MainWindow" Height="804.5" Width="1216" 
+        Closed="MainWPFWindow_Closed">
     <Grid x:Name="Grid" Background="#FFECECEC">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="95*"/>
@@ -22,12 +23,15 @@
             </Image>
         </Grid>
         <GridSplitter HorizontalAlignment="Left" Height="100" Margin="-68,10,0,0" VerticalAlignment="Top" Width="5"/>
-        <Button x:Name="populateButton" Content="Populate" HorizontalAlignment="Left" Margin="505,20,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="1.34,0.175" FontSize="16"/>
+        <Button x:Name="populateButton" Content="Add 10 people" HorizontalAlignment="Left" Margin="505,20,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="1.34,0.175" FontSize="16"/>
         <Label Content="OSN View" HorizontalAlignment="Left" Margin="370,20,0,0" VerticalAlignment="Top" FontSize="16"/>
         <CheckBox x:Name="createFollowsCheckbox" Content="Create random follows" Grid.Column="1" HorizontalAlignment="Left" Margin="56,21,0,0" VerticalAlignment="Top"  FontSize="16"/>
         <Button x:Name="createFakeNewsButton" Content="Insert fake news" HorizontalAlignment="Left" Margin="202,70,0,0" VerticalAlignment="Top" Width="132" Click="CreateFakeNewsButton_Click"/>
         <Button x:Name="createTrueNewsButton" Content="Insert true news" HorizontalAlignment="Left" Margin="202,112,0,0" VerticalAlignment="Top" Width="132" Click="CreateTrueNewsButton_Click"/>
-        <Button x:Name="outputButton" Content="Button" HorizontalAlignment="Left" Margin="202,204,0,0" VerticalAlignment="Top" Width="132" Click="OutputButton_Click"/>
+        <Button x:Name="outputButton" Content="Output" HorizontalAlignment="Left" Margin="202,204,0,0" VerticalAlignment="Top" Width="132" Click="OutputButton_Click"/>
+        <Label x:Name="outputLabel" HorizontalAlignment="Left" Margin="34,325,0,0" VerticalAlignment="Top" Height="129" Width="280" FontSize="14"/>
+        <Label Content="Output:" HorizontalAlignment="Left" Margin="34,296,0,0" VerticalAlignment="Top" FontWeight="Bold" FontSize="14"/>
+        <Rectangle HorizontalAlignment="Left" Height="163" Margin="23,321,0,0" Stroke="Black" VerticalAlignment="Top" Width="291"/>
 
 
 
