@@ -159,7 +159,7 @@ namespace ModelAttemptWPF
 
         }
 
-        public void ShareNews(News news, Account poster)
+        public void ShareNews(News news, Account poster,double time)
         {
             Post post = new Post(news, 0, poster);
             accountList[poster.ID].page.Add(post);
@@ -172,23 +172,21 @@ namespace ModelAttemptWPF
         }
 
 
-        public News CreateNews(string name, bool isTrue, Account poster)
+        public News CreateNews(string name, bool isTrue, Account poster,double time)
         {
             News news = new News(this.newsCount,name+poster.ID, isTrue);
             this.newsList.Add(news);
-            this.ShareNews(news, poster);
+            this.ShareNews(news, poster, time);
             this.newsCount++;
             return news;
         }
 
-        public void ViewFeed(Account account)
+        public void ViewFeed(Account account,double time)
         {
             // Create a list of news that will be shared by this person
-            List<News> newsToShare = new List<News>();
-            List<Account> accounts=this.accountList;
             foreach (Account followee in account.following)
             {
-                foreach (Post post in followee.page.Take(10))
+                foreach (Post post in followee.page)
                 {
                     // Console.WriteLine(post.news.ID + " is viewed by " + account.person.name + " from " + followee.person.name + "'s post, has seen: " + post.news.HasSeen(account));
 
@@ -199,13 +197,46 @@ namespace ModelAttemptWPF
                         if (randomDouble < account.person.AssesNews(post.news))
                         {
                             Console.WriteLine(account.person.name + " shared " + post.news.name);
-                            this.ShareNews(post.news, account);
+                            this.ShareNews(post.news, account,time);
                         }
                     }
                     if (post.news.HasSeen(account) == false)
                     {
                         post.news.viewers.Add(account);
                         accountList[account.ID].seen.Add(post.news);
+                    }
+                }
+            }
+        }
+        public void ViewNews( Account account, News news, double time)
+        {
+            if (accountList[account.ID].HasShared(news) == false)
+            {
+                if (random.NextDouble() < account.person.AssesNews(news))
+                {
+                    Console.WriteLine(account.person.name + " shared " + news.name);
+                    this.ShareNews(news, account, time);
+                }
+                if (news.HasSeen(account) == false)
+                {
+                    news.viewers.Add(account);
+                    accountList[account.ID].seen.Add(news);
+                }
+            }
+        }
+
+        public void ViewFeed2(Account account, double time)
+        {
+            // Create a list of all the posts within the last 30 mins (2 timeslots)
+            List<Post> currentFeed = new List<Post>();
+
+            foreach (Account followee in account.following)
+            {
+                foreach (Post post in followee.page)
+                {
+                    if (time - post.time <= 30)
+                    {
+                        ViewNews(account, post.news, time);
                     }
                 }
             }
@@ -263,7 +294,7 @@ namespace ModelAttemptWPF
             }
         }
 
-        public void TimeSlotPasses()
+        public void TimeSlotPasses(double time)
         {
             // Determine which users will check their news feed in this time slot
             double randomDouble = random.NextDouble();
@@ -271,7 +302,7 @@ namespace ModelAttemptWPF
             {
                 if (account.person.freqUse > randomDouble)
                 {
-                    this.ViewFeed(this.accountList[account.ID]);
+                    this.ViewFeed2(this.accountList[account.ID], time);
                 }
 
             }

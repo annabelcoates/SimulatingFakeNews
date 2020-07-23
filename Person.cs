@@ -56,7 +56,7 @@ public class Person
         this.largeNetwork = Math.Min(1, this.e + this.c); // sum the e and the c, but cannot be greater than 1
 
         // research on likelihood of sharing needed
-        this.sharingFreq = this.e;
+        this.sharingFreq = this.e*this.e;
     }
 
     public bool WillShare(News news)
@@ -79,7 +79,7 @@ public class Person
         double believabilityFactor = Math.Min(1, news.believability / 2*this.onlineLiteracy);
 
         double shareProb = this.sharingFreq * (politicalFactor + emotionalFactor + believabilityFactor) / 3;
-        Console.WriteLine(this.name+" probability of sharing "+news.name+": " + shareProb);
+        //Console.WriteLine(this.name+" probability of sharing "+news.name+": " + shareProb);
         // return the likelihood that someone will share the news
         return shareProb;
 

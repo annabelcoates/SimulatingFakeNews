@@ -6,15 +6,15 @@ namespace ModelAttemptWPF
     {
         public News news;
         public Account poster;
-        public int hourOfDay;
+        public double time;
         public int popularity;
         public int uniqueViews;
         public int totalViews;
 
-        public Post(News news, int hourOfDay, Account poster)
+        public Post(News news, double time, Account poster)
         {
             this.news = news;
-            this.hourOfDay = hourOfDay;
+            this.time = time;
             this.poster = poster;
         }
     }
