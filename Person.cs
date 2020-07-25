@@ -56,7 +56,7 @@ public class Person
         this.largeNetwork = Math.Min(1, this.e + this.c); // sum the e and the c, but cannot be greater than 1
 
         // research on likelihood of sharing needed
-        this.sharingFreq = this.e*this.e;
+        this.sharingFreq = 1; //this.e*this.e;
     }
 
     public bool WillShare(News news)
@@ -76,9 +76,11 @@ public class Person
         double emotionalFactor = Math.Min(1, this.emotionalState + news.emotionalLevel);
 
         // The perceived believability is dependent on the believability of the article and the person's online literacy
-        double believabilityFactor = Math.Min(1, news.believability / 2*this.onlineLiteracy);
+        double believabilityFactor = Math.Max(0,news.believability-0.25*this.onlineLiteracy);
 
-        double shareProb = this.sharingFreq * (politicalFactor + emotionalFactor + believabilityFactor) / 3;
+        // According to Pennycook & Rand (2018) failing to identify news is fake is the biggest affector of how likely a person is to believe and therefore share it (partisanship/ political factor is more minor)
+
+        double shareProb = this.sharingFreq * (politicalFactor + emotionalFactor + 4*believabilityFactor) / 5;
         //Console.WriteLine(this.name+" probability of sharing "+news.name+": " + shareProb);
         // return the likelihood that someone will share the news
         return shareProb;

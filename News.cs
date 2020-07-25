@@ -25,21 +25,15 @@ namespace ModelAttemptWPF
 
         public Random random = new Random();
 
-        public News(int ID,string name, bool isTrue)
+        public News(int ID,string name, bool isTrue, double emotionalLevel,double believability)
         {
             this.ID = ID;
             this.name=name;
             this.isTrue = isTrue;
             this.politicalLeaning = random.NextDouble();
-            this.believability = random.NextDouble();
-            if(this.isTrue)
-            {
-                emotionalLevel = 0.5;
-            }
-            else
-            {
-                emotionalLevel = 1;
-            }
+            this.emotionalLevel = emotionalLevel;
+            this.believability = believability;
+
         }
 
         public bool HasSeen(Account account)

@@ -43,8 +43,8 @@ namespace ModelAttemptWPF
 
         public MainWindow()
         {
-            this.simulation = new Simulation("SimpleVersion", 5);
-            this.simulation.RandomPopulate(200);
+            this.simulation = new Simulation("SimpleVersion", 10);
+            this.simulation.SimplePopulate(500);
 
             //SciChartSurface.SetRuntimeLicenseKey("9022a0a8 - 41e1 - 43e1 - a680 - 5afb55c964a6");
             Clock.Interval = TimeSpan.FromMilliseconds(150f / simulation.runSpeed);
@@ -57,15 +57,21 @@ namespace ModelAttemptWPF
             this.twitter = new OSN(this);
 
             // Give twitter a small initial population
-            this.twitter.PopulateFromPeople(200,simulation.humanPopulation);
+            this.twitter.PopulateFromPeople(500,simulation.humanPopulation);
             this.twitter.CreateMutualFollowsFromGraph(wheelGraphPath);
             // DisplayOSN(twitter);
 
             // Create some news to be shared
-            twitter.CreateNews("FakeNews", false, twitter.accountList[random.Next(twitter.IDCount)],simulation.time);
-            twitter.CreateNews("FakeNews", false, twitter.accountList[random.Next(twitter.IDCount)],simulation.time);
-            twitter.CreateNews("TrueNews", true, twitter.accountList[random.Next(twitter.IDCount)],simulation.time);
-            twitter.CreateNews("TrueNews", true, twitter.accountList[random.Next(twitter.IDCount)],simulation.time);
+            for (int i = 0; i < 10; i++)
+            {
+                twitter.CreateNews("FakeNews", false, twitter.accountList[random.Next(twitter.IDCount)], simulation.time,0.5,0.1);
+            }
+
+            for (int i = 0; i < 40; i++)
+            {
+                twitter.CreateNews("TrueNews", true, twitter.accountList[random.Next(twitter.IDCount)], simulation.time,0.5,1);
+            }
+
             InitializeComponent();
             Clock.Start();
             MinClock.Start();
@@ -272,11 +278,11 @@ namespace ModelAttemptWPF
 
         private void CreateFakeNewsButton_Click(object sender, RoutedEventArgs e)
         {
-            twitter.CreateNews("FakeNews", false, twitter.accountList[random.Next(twitter.IDCount)],simulation.time);
+            twitter.CreateNews("FakeNews", false, twitter.accountList[random.Next(twitter.IDCount)],simulation.time,1,1);
         }
         private void CreateTrueNewsButton_Click(object sender, RoutedEventArgs e)
         {
-            twitter.CreateNews("TrueNews", true, twitter.accountList[random.Next(twitter.IDCount)], simulation.time);
+            twitter.CreateNews("TrueNews", true, twitter.accountList[random.Next(twitter.IDCount)], simulation.time,1,1);
         }
         private void OutputButton_Click(object sender, RoutedEventArgs e)
         {

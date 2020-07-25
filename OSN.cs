@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Data.Analysis;
+using Medallion;
 namespace ModelAttemptWPF
 {
     public class OSN
@@ -172,9 +173,9 @@ namespace ModelAttemptWPF
         }
 
 
-        public News CreateNews(string name, bool isTrue, Account poster,double time)
+        public News CreateNews(string name, bool isTrue, Account poster,double time,double emotionalLevel,double believability)
         {
-            News news = new News(this.newsCount,name+poster.ID, isTrue);
+            News news = new News(this.newsCount,name+poster.ID, isTrue,emotionalLevel,believability);
             this.newsList.Add(news);
             this.ShareNews(news, poster, time);
             this.newsCount++;
@@ -229,16 +230,21 @@ namespace ModelAttemptWPF
         {
             // Create a list of all the posts within the last 30 mins (2 timeslots)
             List<Post> currentFeed = new List<Post>();
-
+            int count = 0;
             foreach (Account followee in account.following)
             {
                 foreach (Post post in followee.page)
                 {
-                    if (time - post.time <= 30)
+                    if (time - post.time <= 30 & count <10)
                     {
-                        ViewNews(account, post.news, time);
+                        currentFeed.Add(post);
                     }
                 }
+            }
+            currentFeed.Shuffle(random);
+            foreach (Post post in currentFeed.Take(10))
+            {
+                this.ViewNews(account, post.news, time);
             }
         }
 
