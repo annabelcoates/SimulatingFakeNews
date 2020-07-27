@@ -44,6 +44,32 @@ public class Simulation
             humanPopulation.Add(newPerson);
         }
     }
+
+    public void DistributionPopulate(int n)
+    {
+        // Assume a normal distribution of each personality trait
+        // Distribution of personality traits for the UK
+        //https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4372610/
+        // divided b 5 to ensure each is on a 0-1 scale
+        double eMean = 3.24/5.0;
+        double eStd = 0.82/5.0;
+        double aMean = 3.74/5.0;
+        double aStd = 0.62/5.0;
+        double cMean = 3.65/5.0;
+        double cStd = 0.7/5.0;
+        double nMean = 2.97/5.0;
+        double nStd = 0.81 / 5.0;
+        double oMean = 3.67 / 5.0;
+        double oStd = 0.64 / 5.0;
+        for (int i = 0; i < n; i++)
+        {
+            // pick a random name from the name list
+            string name = nameList[random.Next(nameList.Count)];
+            // randomly assign OCEAN values
+            Person newPerson = new Person(name, NormalDistribution(oMean,oStd), NormalDistribution(cMean, cStd), NormalDistribution(eMean, eStd), NormalDistribution(aMean, aStd), NormalDistribution(nMean, nStd), random.NextDouble(), random.NextDouble());
+            humanPopulation.Add(newPerson);
+        }
+    }
     
     public void PopulateFromGraph(int n)
     {
@@ -56,6 +82,46 @@ public class Simulation
 
         // If the column doesn't already exist, create it
         // then add the value as the most recent result with some kind of time stamp?
+    }
+
+    public List<double> CalculateAverages()
+    {
+        double o = 0; double c = 0; double e = 0; double a = 0; double n = 0;
+        double onlineLiteracy = 0; double politicalLeaning = 0;
+        double nPeople = Convert.ToDouble(humanPopulation.Count);
+        foreach (Person person in humanPopulation)
+        {
+            // big 5 personality traits
+            o += person.o;
+            c += person.c;
+            e += person.e;
+            a += person.a;
+            n += person.n;
+
+            // other traits
+            onlineLiteracy += person.onlineLiteracy;
+            politicalLeaning += person.politicalLeaning;
+        }
+        o /= nPeople; c /= nPeople; e /= nPeople; a /= nPeople; n /= nPeople;
+        onlineLiteracy /= nPeople; politicalLeaning /= nPeople;
+        List<double> averages = new List<double>() { o, c, e, a, n, onlineLiteracy, politicalLeaning };
+        return averages;
+    }
+
+    public double NormalDistribution(double mean,double std)
+    {
+        double randNormal=1.1;
+        while (randNormal < 0 | randNormal > 1)
+        {
+            double u1 = 1.0 - random.NextDouble(); //uniform(0,1] random doubles
+            double u2 = 1.0 - random.NextDouble();
+            double randStdNormal = Math.Sqrt(-2.0 * Math.Log(u1)) *
+                         Math.Sin(2.0 * Math.PI * u2); //random normal(0,1)
+
+            randNormal = mean + std * randStdNormal; //random normal(mean,stdDev^2)
+        }
+
+        return randNormal;
     }
 
 

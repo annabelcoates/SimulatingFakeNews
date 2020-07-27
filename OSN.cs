@@ -65,13 +65,13 @@ namespace ModelAttemptWPF
             }
         }
 
-        public void PopulateFromGraph(int n)
+        public void PopulateFromGraph(int n,int k)
         {
             // Create n accounts
 
             this.IncreasePopulation(n);
             // Get python to make a graph for n people and write the connections to a csv
-            this.CreateGraphCSV(this.IDCount.ToString());
+            this.CreateGraphCSV(this.IDCount.ToString(),k.ToString());
             // Create follows from the connections in the csv file
             Console.WriteLine("ID Count after increase:" + this.IDCount);
             this.CreateMutualFollowsFromGraph(this.graphLocation);
@@ -87,7 +87,7 @@ namespace ModelAttemptWPF
             this.CreateMutualFollowsFromGraph(this.realDataGraph);
         }
 
-        public void PopulateFromPeople(int n, List<Person> population)
+        public void PopulateFromPeople(int n, int k, List<Person> population)
         {
             // Choose n people from the population to make accounts
             for (int i = 0; i < n; i++)
@@ -97,7 +97,7 @@ namespace ModelAttemptWPF
                 // Make them an account
                 this.NewAccount(person);
             }
-            this.CreateGraphCSV(n.ToString());
+            this.CreateGraphCSV(n.ToString(),k.ToString());
         }
 
         public void CreateRandomFollows()
@@ -164,6 +164,7 @@ namespace ModelAttemptWPF
         {
             Post post = new Post(news, 0, poster);
             accountList[poster.ID].page.Add(post);
+            this.newsList[news.ID].sharers.Add(poster.person);
             if (news.isTrue == false)
             {
                 this.nSharedFakeNews++;
@@ -266,9 +267,8 @@ namespace ModelAttemptWPF
                        
         }
 
-        private void CreateGraphCSV(string n)
+        private void CreateGraphCSV(string n, string k)
         {
-            Console.WriteLine("In createGraphCSV: " + n);
             process = new Process();
             process.StartInfo.WorkingDirectory = @"C:\Users\Anni\PycharmProjects\NetworkGraphs";
             process.OutputDataReceived += (sender, e) => Console.WriteLine($"Recieved:\t{e.Data}");
@@ -279,7 +279,7 @@ namespace ModelAttemptWPF
 
             process.StartInfo.FileName = @"C:\Users\Anni\AppData\Local\Programs\Python\Python37\python.exe";
             /// python exe @"C:\Users\Anni\PycharmProjects\NetworkGraphs\tester_wheel_graph.py";
-            process.StartInfo.Arguments = "tester_wheel_graph.py --n " + n;
+            process.StartInfo.Arguments = "tester_wheel_graph.py --n " + n + " --k " + k;
             process.Start();
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();

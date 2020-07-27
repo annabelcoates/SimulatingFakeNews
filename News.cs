@@ -18,6 +18,7 @@ namespace ModelAttemptWPF
         public int totalViews;
         public int uniqueViews; // equal to the count of the viewers list so probably not needed
         public List<Account> viewers = new List<Account>();
+        public List<Person> sharers = new List<Person>();
 
         // Statistics
         public int nShared = 0;
@@ -48,6 +49,31 @@ namespace ModelAttemptWPF
                 }
             }
             return false;
+        }
+
+        public List<double> CalculatePersonAverages()
+        {
+         
+            double o = 0; double c = 0; double e = 0; double a = 0; double n = 0;
+            double onlineLiteracy = 0; double politicalLeaning = 0;
+            double nSharers = Convert.ToDouble(sharers.Count);
+            foreach (Person sharer in sharers)
+            {
+                // big 5 personality traits
+                o += sharer.o;
+                c += sharer.c;
+                e += sharer.e;
+                a += sharer.a;
+                n += sharer.n;
+                
+                // other traits
+                onlineLiteracy += sharer.onlineLiteracy;
+                politicalLeaning += sharer.politicalLeaning;
+            }
+            o /= nSharers; c /= nSharers; e /= nSharers; a /= nSharers; n /= nSharers;
+            onlineLiteracy /= nSharers; politicalLeaning /= nSharers;
+            List<double> averages = new List<double>() { o, c, e, a, n, onlineLiteracy, politicalLeaning };
+            return averages;
         }
     }
 }

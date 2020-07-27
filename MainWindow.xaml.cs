@@ -35,7 +35,7 @@ namespace ModelAttemptWPF
         Random random = new Random();
         public DispatcherTimer Clock { get; set; } = new DispatcherTimer();
         private DispatcherTimer MinClock {get;set;}=new DispatcherTimer();
-        OSN twitter;
+        OSN facebook;
         private string wheelGraphPath = "C:/Users/Anni/Documents/Uni/Computer Science/Proj/wheel_graph.csv";
         private string realFBEdges = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\facebook_combined.txt\facebook_combined.csv";
 
@@ -43,54 +43,106 @@ namespace ModelAttemptWPF
 
         public MainWindow()
         {
-            this.simulation = new Simulation("SimpleVersion", 10);
-            this.simulation.SimplePopulate(500);
+            this.UKDistributionSimulation(1000);
 
-            //SciChartSurface.SetRuntimeLicenseKey("9022a0a8 - 41e1 - 43e1 - a680 - 5afb55c964a6");
             Clock.Interval = TimeSpan.FromMilliseconds(150f / simulation.runSpeed);
-            Clock.Tick += Update;
+            Clock.Tick += StandardFBUpdate;
             MinClock.Interval = TimeSpan.FromMilliseconds(10f / simulation.runSpeed);
             Clock.Tick += UpdateSimulationTime;
 
-
-
-            this.twitter = new OSN(this);
-
-            // Give twitter a small initial population
-            this.twitter.PopulateFromPeople(500,simulation.humanPopulation);
-            this.twitter.CreateMutualFollowsFromGraph(wheelGraphPath);
-            // DisplayOSN(twitter);
-
-            // Create some news to be shared
-            for (int i = 0; i < 10; i++)
-            {
-                twitter.CreateNews("FakeNews", false, twitter.accountList[random.Next(twitter.IDCount)], simulation.time,0.5,0.1);
-            }
-
-            for (int i = 0; i < 40; i++)
-            {
-                twitter.CreateNews("TrueNews", true, twitter.accountList[random.Next(twitter.IDCount)], simulation.time,0.5,1);
-            }
 
             InitializeComponent();
             Clock.Start();
             MinClock.Start();
         }
+        private void StandardFacebook(int n)
+        {
+            this.simulation = new Simulation("SimpleVersion", 10);
+            this.simulation.RandomPopulate(n);
 
-        private void Update(object sender, EventArgs e)
+            //SciChartSurface.SetRuntimeLicenseKey("9022a0a8 - 41e1 - 43e1 - a680 - 5afb55c964a6");
+
+            
+            this.facebook = new OSN(this);
+
+            // Give twitter a small initial population
+            this.facebook.PopulateFromPeople(n, n/5, simulation.humanPopulation);
+            this.facebook.CreateMutualFollowsFromGraph(wheelGraphPath);
+            // DisplayOSN(twitter);
+
+            // Create some news to be shared
+            for (int i = 0; i < 20; i++)
+            {
+                facebook.CreateNews("FakeNews", false, facebook.accountList[random.Next(facebook.IDCount)], simulation.time, 1, 0.1);
+            }
+
+            for (int i = 0; i < 20; i++)
+            {
+                facebook.CreateNews("TrueNews", true, facebook.accountList[random.Next(facebook.IDCount)], simulation.time, 0.5, 1);
+            }
+
+        }
+
+        private void StandardFBUpdate(object sender, EventArgs e)
         {
             simulation.time = 15; // A time slot represents a 15 minute period
             if (this.createFollowsCheckbox.IsChecked==true)
             {
-                this.twitter.CreateRandomFollow();
+                this.facebook.CreateRandomFollow();
             }
-            this.twitter.TimeSlotPasses(simulation.time);
+            this.facebook.TimeSlotPasses(simulation.time);
             this.simulation.timeStamps.Add(timeSlot);
-            this.twitter.accountList[0].OutputPage(this);
+            this.facebook.accountList[0].OutputPage(this);
             //this.DisplayOSN(twitter);
             timeSlot++;
         }
 
+
+        private void HighEFacebookSimulation(int n)
+        {
+            this.simulation = new Simulation("High extroversion facebook", 10);
+            this.simulation.RandomPopulate(n);
+            this.facebook = new OSN(this);
+
+            // Give twitter a small initial population
+            this.facebook.PopulateFromPeople(n, n/5, simulation.humanPopulation);
+            this.facebook.CreateMutualFollowsFromGraph(wheelGraphPath);
+            // DisplayOSN(twitter);
+
+            // Create some news to be shared
+            for (int i = 0; i < 20; i++)
+            {
+                facebook.CreateNews("FakeNews", false, facebook.accountList[random.Next(facebook.IDCount)], simulation.time, 1, 0.1);
+            }
+
+            for (int i = 0; i < 20; i++)
+            {
+                facebook.CreateNews("TrueNews", true, facebook.accountList[random.Next(facebook.IDCount)], simulation.time, 0.5, 1);
+            }
+        }
+        private void UKDistributionSimulation(int n)
+        {
+            this.simulation = new Simulation("UK Distribution facebook", 10);
+            this.simulation.DistributionPopulate(n);
+            this.facebook = new OSN(this);
+
+            // Give twitter a small initial population
+            this.facebook.PopulateFromPeople(n, n/5, simulation.humanPopulation);
+            this.facebook.CreateMutualFollowsFromGraph(wheelGraphPath);
+            // DisplayOSN(twitter);
+
+            // Create some news to be shared
+            for (int i = 0; i < 20; i++)
+            {
+                facebook.CreateNews("FakeNews", false, facebook.accountList[random.Next(facebook.IDCount)], simulation.time, 1, 0.1);
+            }
+
+            for (int i = 0; i < 20; i++)
+            {
+                facebook.CreateNews("TrueNews", true, facebook.accountList[random.Next(facebook.IDCount)], simulation.time, 0.5, 1);
+            }
+
+        }
         private void UpdateSimulationTime(object sender, EventArgs e)
         {
             this.simulation.time++;
@@ -278,18 +330,18 @@ namespace ModelAttemptWPF
 
         private void CreateFakeNewsButton_Click(object sender, RoutedEventArgs e)
         {
-            twitter.CreateNews("FakeNews", false, twitter.accountList[random.Next(twitter.IDCount)],simulation.time,1,1);
+            facebook.CreateNews("FakeNews", false, facebook.accountList[random.Next(facebook.IDCount)],simulation.time,1,1);
         }
         private void CreateTrueNewsButton_Click(object sender, RoutedEventArgs e)
         {
-            twitter.CreateNews("TrueNews", true, twitter.accountList[random.Next(twitter.IDCount)], simulation.time,1,1);
+            facebook.CreateNews("TrueNews", true, facebook.accountList[random.Next(facebook.IDCount)], simulation.time,1,1);
         }
         private void OutputButton_Click(object sender, RoutedEventArgs e)
         {
-            Console.WriteLine("Time: " + DateTime.Now.ToString() + ", N shared fake news: " + twitter.nSharedFakeNews+" out of "+ this.twitter.accountList.Count+" users");
-            this.outputLabel.Content += this.twitter.nSharedFakeNews + ", ";
+            Console.WriteLine("Time: " + DateTime.Now.ToString() + ", N shared fake news: " + facebook.nSharedFakeNews+" out of "+ this.facebook.accountList.Count+" users");
+            this.outputLabel.Content += this.facebook.nSharedFakeNews + ", ";
             string outputString = "output=[";
-            foreach (int value in this.twitter.nSharedFakeNewsList)
+            foreach (int value in this.facebook.nSharedFakeNewsList)
             {
                 outputString += value.ToString() + ", ";
             }
@@ -299,35 +351,49 @@ namespace ModelAttemptWPF
 
         private void CreateFollowsClicked(object sender, EventArgs e)
         {
-            this.twitter.CreateRandomFollows();
+            this.facebook.CreateRandomFollows();
         }
 
         private void PopulateClicked(object sender, EventArgs e)
         {
-            this.twitter.PopulateFromGraph(100);
+            this.facebook.PopulateFromGraph(100,10);
            // this.DisplayOSN(twitter);
         }
 
-        private void MainWPFWindow_Closed(object sender, EventArgs e)
+        private void MainWPFWindow_Closed(object sender, EventArgs eA)
         {
 
-            File.WriteAllLines(@"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\nSharedFakeNews.csv", this.twitter.nSharedFakeNewsList.Select(x => string.Join(",", x)));
+            File.WriteAllLines(@"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\nSharedFakeNews.csv", this.facebook.nSharedFakeNewsList.Select(x => string.Join(",", x)));
 
-            foreach(News news in twitter.newsList)
+            var csv = new StringBuilder();
+            List<double> populationAverages = simulation.CalculateAverages();
+            var firstLine = string.Format("{0},{1},{2},{3},{4},{5},{6}", populationAverages[0], populationAverages[1], populationAverages[2], populationAverages[3], populationAverages[4], populationAverages[5], populationAverages[6]);
+            csv.AppendLine(firstLine); foreach (News news in facebook.newsList)
             {
                 File.WriteAllLines(@"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\nShared"+news.ID+".csv", news.nSharedList.Select(x => string.Join(",", x)));
+
+                double nViewers = Convert.ToDouble(news.viewers.Count);
+
+                List<double> personalityAverages = news.CalculatePersonAverages();
+
+                var newLine = string.Format("{0},{1},{2},{3},{4},{5},{6}", personalityAverages[0], personalityAverages[1], personalityAverages[2], personalityAverages[3], personalityAverages[4], personalityAverages[5], personalityAverages[6]);
+                csv.AppendLine(newLine);
+
             }
-            
+            File.WriteAllText(@"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\personalityAverages.csv", csv.ToString());
+
+
+
+
             File.WriteAllLines(@"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\timeStamps.csv", this.simulation.timeStamps.Select(x => string.Join(",", x)));
 
             string outputString = "output=[";
-            foreach (int value in this.twitter.nSharedFakeNewsList)
+            foreach (int value in this.facebook.nSharedFakeNewsList)
             {
                 outputString += value.ToString() + ", ";
             }
             outputString += "]";
             Console.WriteLine(outputString);
-
 
         }
     }
