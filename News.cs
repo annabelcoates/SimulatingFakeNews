@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ModelAttemptWPF
 {
@@ -18,11 +15,15 @@ namespace ModelAttemptWPF
         public int totalViews;
         public int uniqueViews; // equal to the count of the viewers list so probably not needed
         public List<Person> viewers = new List<Person>();
+        public List<int> nViews = new List<int>(); // the number of times each person has viewed the piece of news, corresponds to each element in the viewers list
         public List<Person> sharers = new List<Person>();
 
         // Statistics
         public int nShared = 0;
         public List<int> nSharedList = new List<int>() { 0 };
+        public int nViewed = 0;
+        public List<int> nViewedList = new List<int>() { 0 };
+       
 
         public Random random = new Random();
 
@@ -98,6 +99,20 @@ namespace ModelAttemptWPF
             onlineLiteracy /= nViewers; politicalLeaning /= nViewers;
             List<double> averages = new List<double>() { o, c, e, a, n, onlineLiteracy, politicalLeaning };
             return averages;
+        }
+
+        public int NumberOfTimesViewed(Person person)
+        {
+            // Find the index of the viewer in the viewers list for the person that is currently viewing the news
+            int key = viewers.FindIndex(viewer => viewer.ID == person.ID);
+            if(key > 0)
+            {
+                return nViews[key];
+            }
+            else
+            {
+                return 0;
+            }
         }
     }
 }
