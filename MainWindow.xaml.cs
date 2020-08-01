@@ -37,6 +37,7 @@ namespace ModelAttemptWPF
         private DispatcherTimer MinClock {get;set;}=new DispatcherTimer();
         OSN facebook;
         private string wheelGraphPath = "C:/Users/Anni/Documents/Uni/Computer Science/Proj/wheel_graph.csv";
+        private string smallWorldPath = "C:/Users/Anni/Documents/Uni/Computer Science/Proj/small_world_graph.csv";
         private string realFBEdges = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\facebook_combined.txt\facebook_combined.csv";
 
         private int timeSlot = 1;
@@ -65,10 +66,15 @@ namespace ModelAttemptWPF
             
             this.facebook = new OSN(this);
 
-            // Give twitter a small initial population
-            this.facebook.PopulateFromPeople(n, n/5, simulation.humanPopulation);
+            // Create a population of people and have them all be following n/10 other people
+            this.facebook.PopulateFromPeople(n, n/10, simulation.humanPopulation);
             this.facebook.CreateMutualFollowsFromGraph(wheelGraphPath);
-            // DisplayOSN(twitter);
+
+            // Now give people more connections based on their personality traits
+            foreach(Account account in facebook.accountList)
+            {
+
+            }
 
             // Create some news to be shared
             for (int i = 0; i < 20; i++)
@@ -127,8 +133,10 @@ namespace ModelAttemptWPF
             this.facebook = new OSN(this);
 
             // Give twitter a small initial population
-            this.facebook.PopulateFromPeople(n, n/5, simulation.humanPopulation);
-            this.facebook.CreateMutualFollowsFromGraph(wheelGraphPath);
+            int k = 10; // make k twice as small for a mutual follow system
+            this.facebook.PopulateFromPeople(n,k, simulation.humanPopulation);
+            this.facebook.CreateMutualFollowsFromGraph(smallWorldPath);
+            this.facebook.CreateFollowsBasedOnPersonality(n / 2);
             // DisplayOSN(twitter);
 
             // Create some news to be shared
@@ -183,22 +191,6 @@ namespace ModelAttemptWPF
             }
             return searchList;
 
-        }
-
-
-        public void CreateFollowsFromGraph(string filePath)
-        {
-            // Change this to create real connections? Not currently needed
-
-            //List<string[]> connections = LoadCsvFile(filePath);
-            //foreach (string[] connection in connections)
-            //{
-            //    // string[0] is the key and isn't necesary
-            //    //Console.WriteLine("connection line:" + connection[0] + " " + connection[1] + " " + connection[2]);
-            //    int followerID = Convert.ToInt16(connection[1]);
-            //    int followeeID = Convert.ToInt16(connection[2]);
-            //    this.Follow(accountList[followeeID], accountList[followerID]);
-            //}
         }
 
 
@@ -349,14 +341,11 @@ namespace ModelAttemptWPF
             Console.WriteLine(outputString);
         }
 
-        private void CreateFollowsClicked(object sender, EventArgs e)
-        {
-            this.facebook.CreateRandomFollows();
-        }
+
 
         private void PopulateClicked(object sender, EventArgs e)
         {
-            this.facebook.PopulateFromGraph(100,10);
+            //this.facebook.PopulateFromGraph(100,10);
            // this.DisplayOSN(twitter);
         }
 
@@ -368,13 +357,13 @@ namespace ModelAttemptWPF
             var csv = new StringBuilder();
             List<double> populationAverages = simulation.CalculateAverages();
             var firstLine = string.Format("{0},{1},{2},{3},{4},{5},{6}", populationAverages[0], populationAverages[1], populationAverages[2], populationAverages[3], populationAverages[4], populationAverages[5], populationAverages[6]);
-            csv.AppendLine(firstLine); foreach (News news in facebook.newsList)
+            csv.AppendLine(firstLine);
+            foreach (News news in facebook.newsList)
             {
                 File.WriteAllLines(@"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\nShared"+news.ID+".csv", news.nSharedList.Select(x => string.Join(",", x)));
 
-                double nViewers = Convert.ToDouble(news.viewers.Count);
 
-                List<double> personalityAverages = news.CalculatePersonAverages();
+                List<double> personalityAverages = news.CalculateSharerAverages();
 
                 var newLine = string.Format("{0},{1},{2},{3},{4},{5},{6}", personalityAverages[0], personalityAverages[1], personalityAverages[2], personalityAverages[3], personalityAverages[4], personalityAverages[5], personalityAverages[6]);
                 csv.AppendLine(newLine);

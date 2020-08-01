@@ -17,7 +17,7 @@ namespace ModelAttemptWPF
 
         public int totalViews;
         public int uniqueViews; // equal to the count of the viewers list so probably not needed
-        public List<Account> viewers = new List<Account>();
+        public List<Person> viewers = new List<Person>();
         public List<Person> sharers = new List<Person>();
 
         // Statistics
@@ -39,11 +39,11 @@ namespace ModelAttemptWPF
 
         public bool HasSeen(Account account)
         {
-            int accountID = account.ID; //for speed
+            int personID = account.person.ID; //for speed
             // method to determine if news has been seen by a user before
-            foreach(Account viewer in viewers)
+            foreach(Person viewer in viewers)
             {
-                if (viewer.ID == accountID)
+                if (viewer.ID == personID)
                 {
                     return true;
                 }
@@ -51,7 +51,7 @@ namespace ModelAttemptWPF
             return false;
         }
 
-        public List<double> CalculatePersonAverages()
+        public List<double> CalculateSharerAverages()
         {
          
             double o = 0; double c = 0; double e = 0; double a = 0; double n = 0;
@@ -72,6 +72,30 @@ namespace ModelAttemptWPF
             }
             o /= nSharers; c /= nSharers; e /= nSharers; a /= nSharers; n /= nSharers;
             onlineLiteracy /= nSharers; politicalLeaning /= nSharers;
+            List<double> averages = new List<double>() { o, c, e, a, n, onlineLiteracy, politicalLeaning };
+            return averages;
+        }
+        public List<double> CalculateViewerAverages()
+        {
+
+            double o = 0; double c = 0; double e = 0; double a = 0; double n = 0;
+            double onlineLiteracy = 0; double politicalLeaning = 0;
+            double nViewers = Convert.ToDouble(sharers.Count);
+            foreach (Person viewer in viewers)
+            {
+                // big 5 personality traits
+                o += viewer.o;
+                c += viewer.c;
+                e += viewer.e;
+                a += viewer.a;
+                n += viewer.n;
+
+                // other traits
+                onlineLiteracy += viewer.onlineLiteracy;
+                politicalLeaning += viewer.politicalLeaning;
+            }
+            o /= nViewers; c /= nViewers; e /= nViewers; a /= nViewers; n /= nViewers;
+            onlineLiteracy /= nViewers; politicalLeaning /= nViewers;
             List<double> averages = new List<double>() { o, c, e, a, n, onlineLiteracy, politicalLeaning };
             return averages;
         }

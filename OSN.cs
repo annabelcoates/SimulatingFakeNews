@@ -54,41 +54,33 @@ namespace ModelAttemptWPF
             followee.followers.Add(follower);
         }
 
-        public void IncreasePopulation(int numberOfUsers)
-        {
-            for (int i = 0; i < numberOfUsers; i++)
-            {
-                // if theres two people of the same name it doesn't matter
-                string name = nameList[random.Next(nameList.Count)];
-                Person newPerson = new Person(name, 0.5, 0.5, 0.5, 0.5, 0.5,0.5,0.5);
-                Account newAccount = this.NewAccount(newPerson);
-            }
-        }
+        //public void IncreasePopulation(int numberOfUsers)
+        //{
+        //    for (int i = 0; i < numberOfUsers; i++)
+        //    {
+        //        // if theres two people of the same name it doesn't matter
+        //        string name = nameList[random.Next(nameList.Count)];
+        //        Person newPerson = new Person(name, 0.5, 0.5, 0.5, 0.5, 0.5,0.5,0.5);
+        //        Account newAccount = this.NewAccount(newPerson);
+        //    }
+        //}
 
-        public void PopulateFromGraph(int n,int k)
-        {
-            // Create n accounts
+        //public void PopulateFromGraph(int n,int k)
+        //{
+        //    // Create n accounts
 
-            this.IncreasePopulation(n);
-            // Get python to make a graph for n people and write the connections to a csv
-            this.CreateGraphCSV(this.IDCount.ToString(),k.ToString());
-            // Create follows from the connections in the csv file
-            Console.WriteLine("ID Count after increase:" + this.IDCount);
-            this.CreateMutualFollowsFromGraph(this.graphLocation);
-        }
+        //    this.IncreasePopulation(n);
+        //    // Get python to make a graph for n people and write the connections to a csv
+        //    this.CreateGraphCSV(this.IDCount.ToString(),k.ToString());
+        //    // Create follows from the connections in the csv file
+        //    Console.WriteLine("ID Count after increase:" + this.IDCount);
+        //    this.CreateMutualFollowsFromGraph(this.graphLocation);
+        //}
 
-        public void PopulateFromGraph2()
-        {
-            // Create n accounts
-
-            this.IncreasePopulation(4039);
-            // Get python to make a graph for n people and write the connections to a csv
-            // Create follows from the connections in the csv file
-            this.CreateMutualFollowsFromGraph(this.realDataGraph);
-        }
 
         public void PopulateFromPeople(int n, int k, List<Person> population)
         {
+           
             // Choose n people from the population to make accounts
             for (int i = 0; i < n; i++)
             {
@@ -100,13 +92,8 @@ namespace ModelAttemptWPF
             this.CreateGraphCSV(n.ToString(),k.ToString());
         }
 
-        public void CreateRandomFollows()
+        public void CreateRandomFollows(Account account,int nConnections)
         {
-            foreach (Account account in accountList)
-            {
-                // random number of connections between 0 and everyone
-                int nConnections = random.Next(this.IDCount / 2);
-
                 List<int> connectionIDS = new List<int>();
                 bool connectionsNotFound = true;
 
@@ -119,12 +106,12 @@ namespace ModelAttemptWPF
                         if ((randomID != account.ID) & (connectionIDS.Contains(randomID) == false))
                         {
                             connectionIDS.Add(randomID); // use the list to keep track of who has already been followed
-                            account.Follow(accountList[randomID]);
+                            this.Follow(accountList[account.ID],accountList[randomID]);
+                            this.Follow(accountList[randomID],accountList[account.ID]);
                             connectionsNotFound = false;
                         }
                     }
                 }
-            }
         }
 
         public void CreateRandomFollow()
@@ -204,7 +191,7 @@ namespace ModelAttemptWPF
                     }
                     if (post.news.HasSeen(account) == false)
                     {
-                        post.news.viewers.Add(account);
+                        post.news.viewers.Add(account.person);
                         accountList[account.ID].seen.Add(post.news);
                     }
                 }
@@ -213,6 +200,7 @@ namespace ModelAttemptWPF
         public void ViewNews( Account account, News news, double time)
         {
             if (accountList[account.ID].HasShared(news) == false)
+                // change this so the probability of sharing decreases exponentially
             {
                 if (random.NextDouble() < account.person.AssesNews(news))
                 {
@@ -221,7 +209,7 @@ namespace ModelAttemptWPF
                 }
                 if (news.HasSeen(account) == false)
                 {
-                    news.viewers.Add(account);
+                    newsList[news.ID].viewers.Add(account.person);
                     accountList[account.ID].seen.Add(news);
                 }
             }
@@ -229,21 +217,22 @@ namespace ModelAttemptWPF
 
         public void ViewFeed2(Account account, double time)
         {
-            // Create a list of all the posts within the last 30 mins (2 timeslots)
+            // Create a list of all the posts within the last 30 mins (up to 100) (2 timeslots)
             List<Post> currentFeed = new List<Post>();
             int count = 0;
             foreach (Account followee in account.following)
             {
                 foreach (Post post in followee.page)
                 {
-                    if (time - post.time <= 30 & count <10)
+                    if (time - post.time <= 30 & count <100)
                     {
                         currentFeed.Add(post);
                     }
                 }
             }
             currentFeed.Shuffle(random);
-            foreach (Post post in currentFeed.Take(10))
+            int nPostsToView = Convert.ToInt16(Math.Ceiling(Convert.ToDecimal(account.person.sessionLength * 20)));
+            foreach (Post post in currentFeed.Take(nPostsToView))
             {
                 this.ViewNews(account, post.news, time);
             }
@@ -285,8 +274,7 @@ namespace ModelAttemptWPF
             process.BeginErrorReadLine();
             process.WaitForExit();
         }
-
-
+        
         public void CreateMutualFollowsFromGraph(string filePath)
         {
             List<string[]> connections = LoadCsvFile(filePath);
@@ -297,6 +285,16 @@ namespace ModelAttemptWPF
                 int followeeID = Convert.ToInt16(connection[2]);
                 this.Follow(accountList[followeeID], accountList[followerID]);
                 this.Follow(accountList[followerID], accountList[followeeID]);
+            }
+        }
+
+        public void CreateFollowsBasedOnPersonality(int defaultFollows)
+            //Change this to take a default number of follows
+        {
+            foreach (Account account in this.accountList)
+            {
+                int nConnections = Convert.ToInt16(account.person.largeNetwork * defaultFollows);
+                this.CreateRandomFollows(account, nConnections);
             }
         }
 
