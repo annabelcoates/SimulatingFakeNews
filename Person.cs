@@ -24,6 +24,8 @@ public class Person
     public double sharingFreq;
 
     public string name;
+    public int nFakeShares;
+    public int nTrueShares;
 
     public Random random = new Random();
     public Person(int ID,string name,double o, double c, double e, double a, double n, double politicalLeaning, double onlineLiteracy)

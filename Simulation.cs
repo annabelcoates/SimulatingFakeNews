@@ -2,6 +2,7 @@
 using ModelAttemptWPF;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 public class Simulation
 {
@@ -70,7 +71,7 @@ public class Simulation
         {
            // assign OCEAN values according to a normal distribution
            CreatePerson(NormalDistribution(oMean,oStd), NormalDistribution(cMean, cStd), NormalDistribution(eMean, eStd), NormalDistribution(aMean, aStd),
-               NormalDistribution(nMean, nStd), random.NextDouble(), random.NextDouble());
+               NormalDistribution(nMean, nStd), NormalDistribution(0.75,0.4), random.NextDouble());
         }
     }
     
@@ -126,6 +127,7 @@ public class Simulation
 
         return randNormal;
     }
+
 
 
 }

@@ -6,15 +6,17 @@ using System.IO;
 using System.Linq;
 using Microsoft.Data.Analysis;
 using Medallion;
+using System.Text;
+
 namespace ModelAttemptWPF
 {
     public class OSN
     {
-        private readonly MainWindow window; //Maybe this should be public and just the osn as a whole can be passed to the new Account() method
-
+        public string name;
         private Process process = null; // for python connection
         private string graphLocation=@"C:/Users/Anni/Documents/Uni/Computer Science/Proj/wheel_graph.csv";
         private string realDataGraph= @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\facebook_combined.txt\facebook_combined.csv";
+        private string followCSVPath = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\follows";
 
         public List<Account> accountList = new List<Account>();
         public int IDCount = 0;
@@ -26,17 +28,19 @@ namespace ModelAttemptWPF
         };
         public Random random = new Random();
 
+        private StringBuilder followCSV = new StringBuilder();
+
 
         // Statistics
         public int nSharedFakeNews = 0;
         public int nSeenFakeNews = 0;
         public List<int> nSharedFakeNewsList = new List<int>() { 0 }; // at t=0, 0 people have seen fake news
-        
 
 
-        public OSN(MainWindow window)
+        public OSN(string name)
         {
-            this.window = window;
+            this.name = name;
+            followCSV.AppendLine("source,target");
         }
 
         public Account NewAccount(Person person)
@@ -49,33 +53,10 @@ namespace ModelAttemptWPF
 
         public void Follow(Account follower, Account followee)
         {
-           // this.followArray[follower.ID, beingFollowedAccount.ID] = true;
-            follower.following.Add(followee);
-            followee.followers.Add(follower);
+            accountList[follower.ID].following.Add(followee);
+            accountList[followee.ID].followers.Add(follower);
+            WriteConnectionToCSV(follower.ID, followee.ID);
         }
-
-        //public void IncreasePopulation(int numberOfUsers)
-        //{
-        //    for (int i = 0; i < numberOfUsers; i++)
-        //    {
-        //        // if theres two people of the same name it doesn't matter
-        //        string name = nameList[random.Next(nameList.Count)];
-        //        Person newPerson = new Person(name, 0.5, 0.5, 0.5, 0.5, 0.5,0.5,0.5);
-        //        Account newAccount = this.NewAccount(newPerson);
-        //    }
-        //}
-
-        //public void PopulateFromGraph(int n,int k)
-        //{
-        //    // Create n accounts
-
-        //    this.IncreasePopulation(n);
-        //    // Get python to make a graph for n people and write the connections to a csv
-        //    this.CreateGraphCSV(this.IDCount.ToString(),k.ToString());
-        //    // Create follows from the connections in the csv file
-        //    Console.WriteLine("ID Count after increase:" + this.IDCount);
-        //    this.CreateMutualFollowsFromGraph(this.graphLocation);
-        //}
 
 
         public void PopulateFromPeople(int n, int k, List<Person> population)
@@ -92,7 +73,7 @@ namespace ModelAttemptWPF
             this.CreateGraphCSV(n.ToString(),k.ToString());
         }
 
-        public void CreateRandomFollows(Account account,int nConnections)
+        public void CreateRandomMutualFollows(Account account,int nConnections)
         {
                 List<int> connectionIDS = new List<int>();
                 bool connectionsNotFound = true;
@@ -106,8 +87,8 @@ namespace ModelAttemptWPF
                         if ((randomID != account.ID) & (connectionIDS.Contains(randomID) == false))
                         {
                             connectionIDS.Add(randomID); // use the list to keep track of who has already been followed
-                            this.Follow(accountList[account.ID],accountList[randomID]);
-                            this.Follow(accountList[randomID],accountList[account.ID]);
+                            Follow(accountList[account.ID],accountList[randomID]);
+                            Follow(accountList[randomID],accountList[account.ID]);
                             connectionsNotFound = false;
                         }
                     }
@@ -155,6 +136,11 @@ namespace ModelAttemptWPF
             if (news.isTrue == false)
             {
                 this.nSharedFakeNews++;
+                poster.person.nFakeShares++;
+            }
+            else
+            {
+                poster.person.nTrueShares++;
             }
             this.newsList[news.ID].nShared++;
 
@@ -170,52 +156,36 @@ namespace ModelAttemptWPF
             return news;
         }
 
-        public void ViewFeed(Account account,double time)
-        {
-            // Create a list of news that will be shared by this person
-            foreach (Account followee in account.following)
-            {
-                foreach (Post post in followee.page)
-                {
-                    // Console.WriteLine(post.news.ID + " is viewed by " + account.person.name + " from " + followee.person.name + "'s post, has seen: " + post.news.HasSeen(account));
-
-                    double randomDouble = random.NextDouble();
-                    // If the person wants to share the post and hasn't already done so
-                    if (accountList[account.ID].HasShared(post.news) == false)
-                    {
-                        if (randomDouble < account.person.AssesNews(post.news))
-                        {
-                            Console.WriteLine(account.person.name + " shared " + post.news.name);
-                            this.ShareNews(post.news, account,time);
-                        }
-                    }
-                    if (post.news.HasSeen(account) == false)
-                    {
-                        post.news.viewers.Add(account.person);
-                        accountList[account.ID].seen.Add(post.news);
-                    }
-                }
-            }
-        }
         public void ViewNews( Account account, News news, double time)
         {
             if (accountList[account.ID].HasShared(news) == false)
                 // change this so the probability of sharing decreases exponentially
             {
-                if (random.NextDouble() < account.person.AssesNews(news))
+                double randomWeightedDouble = random.NextDouble() *(Math.Exp(news.NumberOfTimesViewed(account.person)));
+                // TO do change this back to exponential
+                if (random.NextDouble() < account.person.AssesNews(news) & news.HasSeen(account))
                 {
-                    Console.WriteLine(account.person.name + " shared " + news.name);
+                    //Console.WriteLine(account.person.name + " shared " + news.name);
                     this.ShareNews(news, account, time);
                 }
                 if (news.HasSeen(account) == false)
                 {
+                    newsList[news.ID].nViewed++;
                     newsList[news.ID].viewers.Add(account.person);
+                    news.nViews.Add(1);
                     accountList[account.ID].seen.Add(news);
+                }
+                else
+                {
+                    int key = news.viewers.IndexOf(account.person);
+                    // Find the index of the viewer in the viewers list for the person that is currently viewing the news
+                    int key2 = news.viewers.FindIndex(viewer => viewer.ID == account.person.ID);
+                    newsList[news.ID].nViews[key2] += 1;
                 }
             }
         }
 
-        public void ViewFeed2(Account account, double time)
+        public void ViewFeed(Account account, double time)
         {
             // Create a list of all the posts within the last 30 mins (up to 100) (2 timeslots)
             List<Post> currentFeed = new List<Post>();
@@ -294,7 +264,7 @@ namespace ModelAttemptWPF
             foreach (Account account in this.accountList)
             {
                 int nConnections = Convert.ToInt16(account.person.largeNetwork * defaultFollows);
-                this.CreateRandomFollows(account, nConnections);
+                this.CreateRandomMutualFollows(account, nConnections);
             }
         }
 
@@ -306,7 +276,7 @@ namespace ModelAttemptWPF
             {
                 if (account.person.freqUse > randomDouble)
                 {
-                    this.ViewFeed2(this.accountList[account.ID], time);
+                    this.ViewFeed(this.accountList[account.ID], time);
                 }
 
             }
@@ -319,7 +289,18 @@ namespace ModelAttemptWPF
             foreach( News news in newsList)
             {
                 news.nSharedList.Add(news.nShared);
+                news.nViewedList.Add(news.nViewed);
             }
+        }
+        private void WriteConnectionToCSV(int from, int to)
+        {
+            var line = String.Format("{0},{1}", from, to);
+            followCSV.AppendLine(line);
+        }
+        public void SaveFollowCSV()
+        {
+            string[] lines = followCSV.ToString().Split(Environment.NewLine.ToCharArray());
+            File.WriteAllLines(followCSVPath+this.name+".csv", lines);
         }
     }
 }
