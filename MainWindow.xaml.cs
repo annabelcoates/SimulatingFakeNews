@@ -21,6 +21,9 @@ using IronPython.Runtime;
 using Microsoft.Scripting.Hosting;
 using SciChart;
 using SciChart.Charting.Visuals;
+using SciChart.Charting.Visuals.Annotations;
+using SciChart.Charting.Visuals.Axes;
+using SciChart.Charting.ChartModifiers;
 
 namespace ModelAttemptWPF
 {
@@ -35,7 +38,7 @@ namespace ModelAttemptWPF
         Random random = new Random();
         public DispatcherTimer Clock { get; set; } = new DispatcherTimer();
         private DispatcherTimer MinClock {get;set;}=new DispatcherTimer();
-        OSN facebook;
+        Facebook facebook;
         private string wheelGraphPath = "C:/Users/Anni/Documents/Uni/Computer Science/Proj/wheel_graph.csv";
         private string smallWorldPath = "C:/Users/Anni/Documents/Uni/Computer Science/Proj/small_world_graph.csv";
         private string realFBEdges = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\facebook_combined.txt\facebook_combined.csv";
@@ -44,8 +47,9 @@ namespace ModelAttemptWPF
 
         public MainWindow()
         {
-            this.UKDistributionSimulation(1000,5,100);
-            this.UKDistributionSimulation(1000, 100, 100);
+            //this.CreateTestSciChart()
+            this.UKDistributionSimulation(1000,100,200);
+           // this.UKDistributionSimulation(500, 100, 100);
         }
 
         private void SetClockFunctions()
@@ -86,7 +90,7 @@ namespace ModelAttemptWPF
             //SciChartSurface.SetRuntimeLicenseKey("9022a0a8 - 41e1 - 43e1 - a680 - 5afb55c964a6");
 
 
-            this.facebook = new OSN("StandardFacebook");
+            this.facebook = new Facebook("StandardFacebook");
 
             // Create a population of people and have them all be following n/10 other people
             this.facebook.PopulateFromPeople(n, n / 10, simulation.humanPopulation);
@@ -109,7 +113,7 @@ namespace ModelAttemptWPF
         {
             this.simulation = new Simulation("High extroversion facebook", 10);
             this.simulation.RandomPopulate(n);
-            this.facebook = new OSN("HighEFacebook");
+            this.facebook = new Facebook("HighEFacebook");
 
             // Give twitter a small initial population
             this.facebook.PopulateFromPeople(n, n/5, simulation.humanPopulation);
@@ -132,26 +136,31 @@ namespace ModelAttemptWPF
             this.Activate();
             this.simulation = new Simulation("UK Distribution facebook", 10);
             this.simulation.DistributionPopulate(n);
-            this.facebook = new OSN("FacebookUK");
+            this.facebook = new Facebook("FacebookUK");
 
             // Give facebook a small initial population
-            int k = 50; // make k twice as small for a mutual follow system
-            int defaultFollows = 500;
+            int k = 100; // make k twice as small for a mutual follow system
+            int defaultFollows = n/2;
             this.facebook.PopulateFromPeople(n,k, simulation.humanPopulation);
             this.facebook.CreateMutualFollowsFromGraph(smallWorldPath);
             this.facebook.CreateFollowsBasedOnPersonality(defaultFollows);
 
             // Create some news to be shared
+            AddNews(nFake, nTrue,this.facebook);
+            SetClockFunctions();
+        }
+        private void AddNews(int nFake, int nTrue,OSN osn)
+        {
+            // Make this an osn function
             for (int i = 0; i < nFake; i++)
             {
-                facebook.CreateNews("FakeNews", false, facebook.accountList[random.Next(facebook.IDCount)], simulation.time, 1, 0.1);
+                osn.CreateNews("FakeNews", false, osn.accountList[i], simulation.time, 1, 0.1);
             }
 
-            for (int i = 0; i < nTrue; i++)
+            for (int j = nFake; j < nFake+ nTrue; j++)
             {
-                facebook.CreateNews("TrueNews", true, facebook.accountList[random.Next(facebook.IDCount)], simulation.time, 0.5, 1);
+                osn.CreateNews("TrueNews", true, osn.accountList[j], simulation.time, 0.5, 1);
             }
-            SetClockFunctions();
         }
         private void UpdateSimulationTime(object sender, EventArgs e)
         {
@@ -195,6 +204,32 @@ namespace ModelAttemptWPF
 
         }
 
+
+        // Sci Chart Stuff
+        public void CreateTestSciChart()
+        {
+            // Create the chart surface
+            var sciChartSurface = new SciChartSurface();
+
+            // Create the X and Y Axis
+            var xAxis = new NumericAxis() { AxisTitle = "Number of Samples (per series)" };
+            var yAxis = new NumericAxis() { AxisTitle = "Value" };
+
+            sciChartSurface.XAxis = xAxis;
+            sciChartSurface.YAxis = yAxis;
+
+            // Specify Interactivity Modifiers
+            sciChartSurface.ChartModifier = new ModifierGroup(new RubberBandXyZoomModifier(), new ZoomExtentsModifier());
+            // Add annotation hints to the user
+            var textAnnotation = new TextAnnotation()
+            {
+                Text = "Hello World!",
+                X1 = 5.0,
+                Y1 = 5.0
+            };
+            sciChartSurface.Annotations.Add(textAnnotation);
+            this.InitializeComponent();
+        }
 
 
         // GUI methods
@@ -343,7 +378,7 @@ namespace ModelAttemptWPF
             Console.WriteLine(outputString);
         }
 
-
+        
 
         private void PopulateClicked(object sender, EventArgs e)
         {
@@ -354,9 +389,12 @@ namespace ModelAttemptWPF
         private void MainWPFWindow_Closed(object sender, EventArgs eA)
         {
             facebook.SaveFollowCSV();
-            string generalPath = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\" + DateTime.Now.ToFileTime()+@"\";
+            string generalPath = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\";
 
             File.WriteAllLines(generalPath+ "nSharedFakeNews.csv", this.facebook.nSharedFakeNewsList.Select(x => string.Join(",", x)));
+
+            File.WriteAllLines(generalPath + "newsInfo.csv", this.facebook.newsList.Select(x => string.Join(",", x.believability, x.emotionalLevel)));
+
 
             var csv = new StringBuilder();
             var csv2 = new StringBuilder();
@@ -369,6 +407,11 @@ namespace ModelAttemptWPF
                 File.WriteAllLines(generalPath+"nShared"+news.ID+".csv", news.nSharedList.Select(x => string.Join(",", x)));
 
                 File.WriteAllLines(generalPath+"nViewed" + news.ID + ".csv", news.nViewedList.Select(x => string.Join(",", x)));
+                
+                // Write a list of everyone who has shared each news article                
+                File.WriteAllLines(generalPath + "sharers" + news.ID +".csv", news.sharers.Select(x => string.Join(",", x.ID)));
+                File.WriteAllLines(generalPath + "viewers" + news.ID + ".csv", news.viewers.Select(x => string.Join(",", x.ID)));
+
 
                 List<double> personalityAverages = news.CalculateSharerAverages();
                 List<double> viewerAverages = news.CalculateViewerAverages();
@@ -377,15 +420,13 @@ namespace ModelAttemptWPF
                 csv.AppendLine(newLine);
 
                 var newLine2= string.Format("{0},{1},{3},{4},{5},{6}", viewerAverages[0], viewerAverages[1], viewerAverages[2], viewerAverages[3], viewerAverages[4], viewerAverages[5], viewerAverages[6]);
+                csv2.AppendLine(newLine2);
 
             }
+
             File.WriteAllText(generalPath+"sharerPersonalityAverages.csv", csv.ToString());
             File.WriteAllText(generalPath+"viewerPersonalityAverages.csv", csv2.ToString());
 
-            foreach( Person person in simulation.humanPopulation)
-            {
-               Console.WriteLine(person.nFakeShares);
-            }
 
             File.WriteAllLines(generalPath+"timeStamps.csv", this.simulation.timeStamps.Select(x => string.Join(",", x)));
 
@@ -400,7 +441,7 @@ namespace ModelAttemptWPF
             csv.AppendLine("ID,nFollowers,o,c,e,a,n,Online Literacy,Political Leaning,nFakeShares,nTrueShares"); // column headings
             foreach (Account account in facebook.accountList)
             {
-                var line = String.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9}{10}", account.ID, account.followers.Count, account.person.o, account.person.c, account.person.e, account.person.a, account.person.n, account.person.onlineLiteracy, account.person.politicalLeaning, account.person.nFakeShares, account.person.nTrueShares);// o,c,e,a,n,OL,PL nFakeShares, nTrueShares
+                var line = String.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}", account.ID, account.followers.Count, account.person.o, account.person.c, account.person.e, account.person.a, account.person.n, account.person.onlineLiteracy, account.person.politicalLeaning, account.person.nFakeShares, account.person.nTrueShares);// o,c,e,a,n,OL,PL nFakeShares, nTrueShares
                 csv.AppendLine(line);
             }
             File.WriteAllText(@"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\NsharesPopulation.csv", csv.ToString());

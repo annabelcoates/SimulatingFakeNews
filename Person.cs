@@ -21,6 +21,7 @@ public class Person
     public double emotionalState; // Represents how emotional someone feels, 0-1
     public double politicalLeaning; // 0 represents 'the left', 1 represents 'the right'
     public double onlineLiteracy; // how likely someone is to believe fake news
+    public bool informationLiterate;
     public double sharingFreq;
 
     public string name;
@@ -40,7 +41,16 @@ public class Person
         this.n = n;
 
         this.politicalLeaning = politicalLeaning;
-        this.onlineLiteracy = onlineLiteracy;
+        //this.onlineLiteracy = onlineLiteracy;
+
+        if (random.NextDouble() < 0.27) // This is based of Ciftci and Knautz 2016
+        {
+            this.onlineLiteracy = (random.NextDouble() * 0.25) + 0.25;//random double in range 0.25-0.5
+        }
+        else
+        {
+            this.onlineLiteracy = (random.NextDouble() * 0.25) + 0.5;// random double in range 0.5-0.75
+        }
 
         this.emotionalState = 0.5; // emotional state starts average
         this.DetermineComplexBehaviours(); // set the behavioural parameters based on the personality traits
@@ -82,18 +92,12 @@ public class Person
         {
             Console.WriteLine(this.name+" sessionLength  below 0: " + freqUse);
         }
-
-        this.largeNetwork = -0.28 * this.c + 0.24 * this.o + 0.47 * this.e - 0.28 * this.a; // can be larger than 1
-
+        this.largeNetwork = Math.Max(0,(-0.28 * this.c + 0.24 * this.o + 0.47 * this.e - 0.28 * this.a)); // can be larger than 1
+        this.largeNetwork = Math.Sqrt(this.largeNetwork);
         // research on likelihood of sharing needed
         this.sharingFreq = this.e * this.e;
     }
 
-    public bool WillShare(News news)
-    {
-        // for now 50% chance
-        return (random.NextDouble() < 0.5);
-    }
 
     public double AssesNews(News news)
     {
@@ -105,12 +109,13 @@ public class Person
         // how much the news appeals emotionally increases with the person's emotional level and how emotional the news is
         double emotionalFactor = this.n * news.emotionalLevel;
 
+        double believabilityFactor = 1 - onlineLiteracy;
         // The perceived believability is dependent on the believability of the article and the person's online literacy
-        double believabilityFactor = Math.Max(1,news.believability/this.onlineLiteracy);
+        
 
         // According to Pennycook & Rand (2018) failing to identify news is fake is the biggest affector of how likely a person is to believe and therefore share it (partisanship/ political factor is more minor)
 
-        double shareProb = this.sharingFreq * (politicalFactor + emotionalFactor + 4*believabilityFactor) / 5;
+        double shareProb = this.sharingFreq * (politicalFactor + emotionalFactor + 3*believabilityFactor) / 5;
         //Console.WriteLine(this.name+" probability of sharing "+news.name+": " + shareProb);
         // return the likelihood that someone will share the news
         return shareProb;

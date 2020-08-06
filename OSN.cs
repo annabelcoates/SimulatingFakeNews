@@ -16,7 +16,7 @@ namespace ModelAttemptWPF
         private Process process = null; // for python connection
         private string graphLocation=@"C:/Users/Anni/Documents/Uni/Computer Science/Proj/wheel_graph.csv";
         private string realDataGraph= @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\facebook_combined.txt\facebook_combined.csv";
-        private string followCSVPath = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\follows";
+        public string followCSVPath = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\follows";
 
         public List<Account> accountList = new List<Account>();
         public int IDCount = 0;
@@ -28,7 +28,7 @@ namespace ModelAttemptWPF
         };
         public Random random = new Random();
 
-        private StringBuilder followCSV = new StringBuilder();
+        public StringBuilder followCSV = new StringBuilder();
 
 
         // Statistics
@@ -163,7 +163,7 @@ namespace ModelAttemptWPF
             {
                 double randomWeightedDouble = random.NextDouble() *(Math.Exp(news.NumberOfTimesViewed(account.person)));
                 // TO do change this back to exponential
-                if (random.NextDouble() < account.person.AssesNews(news) & news.HasSeen(account))
+                if (randomWeightedDouble < account.person.AssesNews(news) )
                 {
                     //Console.WriteLine(account.person.name + " shared " + news.name);
                     this.ShareNews(news, account, time);
@@ -208,7 +208,7 @@ namespace ModelAttemptWPF
             }
         }
 
-        private List<string[]> LoadCsvFile(string filePath)
+        public List<string[]> LoadCsvFile(string filePath)
         {
             var reader = new StreamReader(File.OpenRead(filePath));
             List<string[]> searchList = new List<string[]>();
