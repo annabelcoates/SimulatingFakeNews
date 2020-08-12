@@ -48,7 +48,7 @@ namespace ModelAttemptWPF
         public MainWindow()
         {
             //this.CreateTestSciChart()
-            this.UKDistributionSimulation(1000,100,200);
+            this.UKDistributionSimulation(1000,125,225);
            // this.UKDistributionSimulation(500, 100, 100);
         }
 
@@ -65,7 +65,7 @@ namespace ModelAttemptWPF
         }
         private void StandardFBUpdate(object sender, EventArgs e)
         {
-            simulation.time = 15; // A time slot represents a 15 minute period
+            simulation.time++; // basically the same as a time slot now
             if (this.createFollowsCheckbox.IsChecked==true)
             {
                 this.facebook.CreateRandomFollow();
@@ -146,7 +146,7 @@ namespace ModelAttemptWPF
             this.facebook.CreateFollowsBasedOnPersonality(defaultFollows);
 
             // Create some news to be shared
-            AddNews(nFake, nTrue,this.facebook);
+            AddDistributedNews(nFake, nTrue,this.facebook);
             SetClockFunctions();
         }
         private void AddNews(int nFake, int nTrue,OSN osn)
@@ -160,6 +160,22 @@ namespace ModelAttemptWPF
             for (int j = nFake; j < nFake+ nTrue; j++)
             {
                 osn.CreateNews("TrueNews", true, osn.accountList[j], simulation.time, 0.5, 1);
+            }
+        }
+        private void AddDistributedNews(int nFake,int nTrue, OSN osn, double meanEFake=0.75, double meanETrue=0.5, double meanBFake=0.25,double meanBTrue = 0.75)
+        {
+            double std = 0.1;
+            for (int i = 0; i < nFake; i++)
+            {
+                double e = simulation.NormalDistribution(meanEFake, std);
+                double b = simulation.NormalDistribution(meanBFake, std);
+                osn.CreateNews("FakeNews", false, osn.accountList[i], simulation.time, e, b);
+            }
+            for (int j =nFake; j< nFake+nTrue; j++)
+            {
+                double e = simulation.NormalDistribution(meanETrue, std);
+                double b = simulation.NormalDistribution(meanBTrue, std);
+                osn.CreateNews("TrueNews", true, osn.accountList[j], simulation.time, e, b);
             }
         }
         private void UpdateSimulationTime(object sender, EventArgs e)
@@ -441,6 +457,7 @@ namespace ModelAttemptWPF
             csv.AppendLine("ID,nFollowers,o,c,e,a,n,Online Literacy,Political Leaning,nFakeShares,nTrueShares"); // column headings
             foreach (Account account in facebook.accountList)
             {
+                Console.WriteLine("OL in write:" + account.person.onlineLiteracy);
                 var line = String.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}", account.ID, account.followers.Count, account.person.o, account.person.c, account.person.e, account.person.a, account.person.n, account.person.onlineLiteracy, account.person.politicalLeaning, account.person.nFakeShares, account.person.nTrueShares);// o,c,e,a,n,OL,PL nFakeShares, nTrueShares
                 csv.AppendLine(line);
             }

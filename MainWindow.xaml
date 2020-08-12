@@ -8,7 +8,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="804.5" Width="1216" 
         Closed="MainWPFWindow_Closed">
-    <Grid x:Name="Grid" Background="#FFECECEC">
+    
+    <Grid x:Name="Grid" Background="Gainsboro">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="95*"/>
             <ColumnDefinition Width="103*"/>

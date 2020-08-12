@@ -36,6 +36,7 @@ namespace ModelAttemptWPF
         public int nSeenFakeNews = 0;
         public List<int> nSharedFakeNewsList = new List<int>() { 0 }; // at t=0, 0 people have seen fake news
 
+        private int chronology = 1000;
 
         public OSN(string name)
         {
@@ -163,7 +164,9 @@ namespace ModelAttemptWPF
             {
                 double randomWeightedDouble = random.NextDouble() *(Math.Exp(news.NumberOfTimesViewed(account.person)));
                 // TO do change this back to exponential
-                if (randomWeightedDouble < account.person.AssesNews(news) )
+                double assesment = account.person.AssesNews(news);
+                //Console.WriteLine(account.person.name + " assesed " + news.name +"(b=" +news.believability+", e="+news.emotionalLevel + ") as: " + assesment);
+                if (randomWeightedDouble < assesment)
                 {
                     //Console.WriteLine(account.person.name + " shared " + news.name);
                     this.ShareNews(news, account, time);
@@ -194,7 +197,7 @@ namespace ModelAttemptWPF
             {
                 foreach (Post post in followee.page)
                 {
-                    if (time - post.time <= 30 & count <100)
+                    if (time - post.time <= this.chronology & count <100)
                     {
                         currentFeed.Add(post);
                     }

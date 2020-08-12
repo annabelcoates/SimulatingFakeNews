@@ -69,9 +69,11 @@ public class Simulation
         double oStd = 0.64 / 5.0;
         for (int i = 0; i < n; i++)
         {
-           // assign OCEAN values according to a normal distribution
+            // assign OCEAN values according to a normal distribution
+            double OL = random.NextDouble();
+            Console.WriteLine("OL:" + OL);
            CreatePerson(NormalDistribution(oMean,oStd), NormalDistribution(cMean, cStd), NormalDistribution(eMean, eStd), NormalDistribution(aMean, aStd),
-               NormalDistribution(nMean, nStd), NormalDistribution(0.75,0.4), random.NextDouble());
+               NormalDistribution(nMean, nStd), NormalDistribution(0.5,0.4), OL);
         }
     }
     

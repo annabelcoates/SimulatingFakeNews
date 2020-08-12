@@ -65,6 +65,9 @@
     <Reference Include="IronPython.Wpf, Version=2.7.10.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
       <HintPath>..\packages\IronPython.2.7.10\lib\net45\IronPython.Wpf.dll</HintPath>
     </Reference>
+    <Reference Include="MedallionRandom, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MedallionRandom.1.1.0\lib\net452\MedallionRandom.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Data.Analysis, Version=0.4.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Data.Analysis.0.4.0\lib\netstandard2.0\Microsoft.Data.Analysis.dll</HintPath>
     </Reference>
@@ -208,6 +211,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Facebook.cs" />
     <Compile Include="Simulation.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
