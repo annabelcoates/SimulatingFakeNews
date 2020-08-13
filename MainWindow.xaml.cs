@@ -40,7 +40,7 @@ namespace ModelAttemptWPF
         private DispatcherTimer MinClock {get;set;}=new DispatcherTimer();
         Facebook facebook;
         private string wheelGraphPath = "C:/Users/Anni/Documents/Uni/Computer Science/Proj/wheel_graph.csv";
-        private string smallWorldPath = "C:/Users/Anni/Documents/Uni/Computer Science/Proj/small_world_graph.csv";
+        private string smallWorldPath = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\small_world_graph.csv";
         private string realFBEdges = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\facebook_combined.txt\facebook_combined.csv";
 
         private int timeSlot = 1;
@@ -48,16 +48,15 @@ namespace ModelAttemptWPF
         public MainWindow()
         {
             //this.CreateTestSciChart()
-            this.UKDistributionSimulation(1000,125,225);
-           // this.UKDistributionSimulation(500, 100, 100);
+            this.UKDistributionSimulation(1000,100,200);
+            
+            // this.UKDistributionSimulation(500, 100, 100);
         }
 
         private void SetClockFunctions()
         {
             Clock.Interval = TimeSpan.FromMilliseconds(150f / simulation.runSpeed);
             Clock.Tick += StandardFBUpdate;
-            MinClock.Interval = TimeSpan.FromMilliseconds(10f / simulation.runSpeed);
-            Clock.Tick += UpdateSimulationTime;
 
             InitializeComponent();
             Clock.Start();
@@ -65,20 +64,18 @@ namespace ModelAttemptWPF
         }
         private void StandardFBUpdate(object sender, EventArgs e)
         {
-            simulation.time++; // basically the same as a time slot now
-            if (this.createFollowsCheckbox.IsChecked==true)
-            {
-                this.facebook.CreateRandomFollow();
-            }
             this.facebook.TimeSlotPasses(simulation.time);
-            this.simulation.timeStamps.Add(timeSlot);
             this.facebook.accountList[0].OutputPage(this);
             //this.DisplayOSN(twitter);
-            if (timeSlot == 1000)
+            if (simulation.time == 100)
+            {
+                this.AddNews(1, 0, this.facebook);
+            }
+            if (simulation.time == 1000)
             {
                 this.Close();
             }
-            timeSlot++;
+            simulation.time++;
 
         }
 
@@ -99,12 +96,12 @@ namespace ModelAttemptWPF
             // Create some news to be shared
             for (int i = 0; i < 20; i++)
             {
-                facebook.CreateNews("FakeNews", false, facebook.accountList[random.Next(facebook.IDCount)], simulation.time, 1, 0.1);
+                facebook.CreateNewsRandomPoster("FakeNews", false, simulation.time, 1, 0.1);
             }
 
             for (int i = 0; i < 20; i++)
             {
-                facebook.CreateNews("TrueNews", true, facebook.accountList[random.Next(facebook.IDCount)], simulation.time, 0.5, 1);
+                facebook.CreateNewsRandomPoster("TrueNews", true, simulation.time, 0.5, 1);
             }
             SetClockFunctions();
         }
@@ -123,15 +120,15 @@ namespace ModelAttemptWPF
             // Create some news to be shared
             for (int i = 0; i < 20; i++)
             {
-                facebook.CreateNews("FakeNews", false, facebook.accountList[random.Next(facebook.IDCount)], simulation.time, 1, 0.1);
+                facebook.CreateNewsRandomPoster("FakeNews", false, simulation.time, 1, 0.1);
             }
 
             for (int i = 0; i < 20; i++)
             {
-                facebook.CreateNews("TrueNews", true, facebook.accountList[random.Next(facebook.IDCount)], simulation.time, 0.5, 1);
+                facebook.CreateNewsRandomPoster("TrueNews", true, simulation.time, 0.5, 1);
             }
         }
-        private void UKDistributionSimulation(int n,int nFake=20,int nTrue=20)
+        private void UKDistributionSimulation(int n,int k=100,int nFake=20,int nTrue=20)
         {
             this.Activate();
             this.simulation = new Simulation("UK Distribution facebook", 10);
@@ -139,7 +136,6 @@ namespace ModelAttemptWPF
             this.facebook = new Facebook("FacebookUK");
 
             // Give facebook a small initial population
-            int k = 100; // make k twice as small for a mutual follow system
             int defaultFollows = n/2;
             this.facebook.PopulateFromPeople(n,k, simulation.humanPopulation);
             this.facebook.CreateMutualFollowsFromGraph(smallWorldPath);
@@ -154,12 +150,12 @@ namespace ModelAttemptWPF
             // Make this an osn function
             for (int i = 0; i < nFake; i++)
             {
-                osn.CreateNews("FakeNews", false, osn.accountList[i], simulation.time, 1, 0.1);
+                osn.CreateNewsRandomPoster("FakeNews", false, simulation.time, 1, 0.1);
             }
 
             for (int j = nFake; j < nFake+ nTrue; j++)
             {
-                osn.CreateNews("TrueNews", true, osn.accountList[j], simulation.time, 0.5, 1);
+                osn.CreateNewsRandomPoster("TrueNews", true, simulation.time, 0.5, 1);
             }
         }
         private void AddDistributedNews(int nFake,int nTrue, OSN osn, double meanEFake=0.75, double meanETrue=0.5, double meanBFake=0.25,double meanBTrue = 0.75)
@@ -169,38 +165,22 @@ namespace ModelAttemptWPF
             {
                 double e = simulation.NormalDistribution(meanEFake, std);
                 double b = simulation.NormalDistribution(meanBFake, std);
-                osn.CreateNews("FakeNews", false, osn.accountList[i], simulation.time, e, b);
+                osn.CreateNewsRandomPoster("FakeNews", false, simulation.time, e, b);
             }
             for (int j =nFake; j< nFake+nTrue; j++)
             {
                 double e = simulation.NormalDistribution(meanETrue, std);
                 double b = simulation.NormalDistribution(meanBTrue, std);
-                osn.CreateNews("TrueNews", true, osn.accountList[j], simulation.time, e, b);
+                osn.CreateNewsRandomPoster("TrueNews", true, simulation.time, e, b);
             }
         }
+      
         private void UpdateSimulationTime(object sender, EventArgs e)
         {
             this.simulation.time++;
         }
 
-        private void CreateGraphCSV(string n)
-        {
-            process = new Process();
-            process.StartInfo.WorkingDirectory = @"C:\Users\Anni\PycharmProjects\NetworkGraphs";
-            process.OutputDataReceived += (sender, e) => Console.WriteLine($"Recieved:\t{e.Data}");
-            process.ErrorDataReceived += (sender, e) => Console.WriteLine($"ERROR:\t {e.Data}");
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
-            process.StartInfo.UseShellExecute = false;
 
-            process.StartInfo.FileName = @"C:\Users\Anni\AppData\Local\Programs\Python\Python37\python.exe";
-            /// python exe @"C:\Users\Anni\PycharmProjects\NetworkGraphs\tester_wheel_graph.py";
-            process.StartInfo.Arguments = "tester_wheel_graph.py --n " + n;
-            process.Start();
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-            process.WaitForExit(1000);
-        }
 
         private List<string[]> LoadCsvFile(string filePath)
         {
@@ -375,11 +355,11 @@ namespace ModelAttemptWPF
 
         private void CreateFakeNewsButton_Click(object sender, RoutedEventArgs e)
         {
-            facebook.CreateNews("FakeNews", false, facebook.accountList[random.Next(facebook.IDCount)],simulation.time,1,1);
+            facebook.CreateNewsRandomPoster("FakeNews", false, simulation.time, 1, 1);
         }
         private void CreateTrueNewsButton_Click(object sender, RoutedEventArgs e)
         {
-            facebook.CreateNews("TrueNews", true, facebook.accountList[random.Next(facebook.IDCount)], simulation.time,1,1);
+            facebook.CreateNewsRandomPoster("TrueNews", true,  simulation.time, 1, 1);
         }
         private void OutputButton_Click(object sender, RoutedEventArgs e)
         {
@@ -442,9 +422,7 @@ namespace ModelAttemptWPF
 
             File.WriteAllText(generalPath+"sharerPersonalityAverages.csv", csv.ToString());
             File.WriteAllText(generalPath+"viewerPersonalityAverages.csv", csv2.ToString());
-
-
-            File.WriteAllLines(generalPath+"timeStamps.csv", this.simulation.timeStamps.Select(x => string.Join(",", x)));
+            
 
             CreateNSharesCSV();
 

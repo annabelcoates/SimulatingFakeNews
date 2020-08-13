@@ -14,9 +14,9 @@ namespace ModelAttemptWPF
     {
         public string name;
         private Process process = null; // for python connection
-        private string graphLocation=@"C:/Users/Anni/Documents/Uni/Computer Science/Proj/wheel_graph.csv";
-        private string realDataGraph= @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\facebook_combined.txt\facebook_combined.csv";
         public string followCSVPath = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\follows";
+        private string smallWorldPath = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\small_world_graph.csv";
+
 
         public List<Account> accountList = new List<Account>();
         public int IDCount = 0;
@@ -36,12 +36,12 @@ namespace ModelAttemptWPF
         public int nSeenFakeNews = 0;
         public List<int> nSharedFakeNewsList = new List<int>() { 0 }; // at t=0, 0 people have seen fake news
 
-        private int chronology = 1000;
+        public int chronology = 1000; // the number of timeslots to go back 
 
         public OSN(string name)
         {
             this.name = name;
-            followCSV.AppendLine("source,target");
+            followCSV.AppendLine("key,source,target");
         }
 
         public Account NewAccount(Person person)
@@ -148,11 +148,16 @@ namespace ModelAttemptWPF
         }
 
 
-        public News CreateNews(string name, bool isTrue, Account poster,double time,double emotionalLevel,double believability)
+        public News CreateNewsRandomPoster(string name, bool isTrue,double time,double emotionalLevel,double believability,int nPosts=1)
         {
-            News news = new News(this.newsCount,name+poster.ID, isTrue,emotionalLevel,believability);
+            News news = new News(this.newsCount,name+newsCount, isTrue,emotionalLevel,believability);
             this.newsList.Add(news);
-            this.ShareNews(news, poster, time);
+            for (int i = 0; i < nPosts; i++)
+            {
+                // could have it so that the time is different for multiple posters
+                Account poster = accountList[random.Next(IDCount)];
+                this.ShareNews(news, poster, time);
+            }
             this.newsCount++;
             return news;
         }
@@ -232,7 +237,7 @@ namespace ModelAttemptWPF
         private void CreateGraphCSV(string n, string k)
         {
             process = new Process();
-            process.StartInfo.WorkingDirectory = @"C:\Users\Anni\PycharmProjects\NetworkGraphs";
+            process.StartInfo.WorkingDirectory = @"C:\Users\Anni\source\repos\ModelAttemptWPF\ModelAttemptWPF";
             process.OutputDataReceived += (sender, e) => Console.WriteLine($"Recieved:\t{e.Data}");
             process.ErrorDataReceived += (sender, e) => Console.WriteLine($"ERROR:\t {e.Data}");
             process.StartInfo.RedirectStandardOutput = true;
@@ -297,13 +302,16 @@ namespace ModelAttemptWPF
         }
         private void WriteConnectionToCSV(int from, int to)
         {
-            var line = String.Format("{0},{1}", from, to);
+            var line = String.Format("{0},{1},{2}", 0, from, to); // so that the columns match from smallworld path
             followCSV.AppendLine(line);
         }
         public void SaveFollowCSV()
         {
             string[] lines = followCSV.ToString().Split(Environment.NewLine.ToCharArray());
             File.WriteAllLines(followCSVPath+this.name+".csv", lines);
+            string[] allSmallWorld = File.ReadAllLines(smallWorldPath);
+            File.AppendAllLines(followCSVPath+this.name+".csv", allSmallWorld);
+
         }
     }
 }

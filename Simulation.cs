@@ -9,7 +9,6 @@ public class Simulation
     public double runSpeed = 1;
     public string versionName;
     public DataFrame resultsDf;
-    public List<int> timeStamps = new List<int>() { 0 }; // t=0
     public List<News> newsList = new List<News>();
 
     public double time=0;
@@ -57,8 +56,8 @@ public class Simulation
         // Distribution of personality traits for the UK
         //https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4372610/
         // divided b 5 to ensure each is on a 0-1 scale
-        double eMean = 3.24/5.0;
-        double eStd = 0.82/5.0;
+        double eMean = 4.5/5.0;
+        double eStd = 0.5/5.0;
         double aMean = 3.74/5.0;
         double aStd = 0.62/5.0;
         double cMean = 3.65/5.0;
@@ -77,10 +76,7 @@ public class Simulation
         }
     }
     
-    public void PopulateFromGraph(int n)
-    {
-
-    }
+ 
 
     public void AddResult(string column, double value)
     {

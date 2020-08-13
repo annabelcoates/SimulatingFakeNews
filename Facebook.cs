@@ -7,7 +7,7 @@ namespace ModelAttemptWPF
     {
         public Facebook(string name):base(name)
         {
-            followCSV.AppendLine("source,target");
+            this.chronology = 500;
         }
 
         public new void CreateRandomMutualFollows(Account account, int nConnections)
