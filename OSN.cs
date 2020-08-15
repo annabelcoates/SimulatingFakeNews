@@ -13,9 +13,11 @@ namespace ModelAttemptWPF
     public class OSN
     {
         public string name;
+        public int chronology = 1000; // the number of timeslots to go back 
+
         private Process process = null; // for python connection
-        public string followCSVPath = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\follows";
-        private string smallWorldPath = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\small_world_graph.csv";
+        public string followCSVPath = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\FacebookUK\follows";
+        private string smallWorldPath = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\FacebookUK\small_world_graph.csv";
 
 
         public List<Account> accountList = new List<Account>();
@@ -36,7 +38,6 @@ namespace ModelAttemptWPF
         public int nSeenFakeNews = 0;
         public List<int> nSharedFakeNewsList = new List<int>() { 0 }; // at t=0, 0 people have seen fake news
 
-        public int chronology = 1000; // the number of timeslots to go back 
 
         public OSN(string name)
         {
@@ -129,9 +130,9 @@ namespace ModelAttemptWPF
 
         }
 
-        public void ShareNews(News news, Account poster,double time)
+        public void ShareNews(News news, Account poster,int time)
         {
-            Post post = new Post(news, 0, poster);
+            Post post = new Post(news, time, poster);
             accountList[poster.ID].page.Add(post);
             this.newsList[news.ID].sharers.Add(poster.person);
             if (news.isTrue == false)
@@ -148,7 +149,7 @@ namespace ModelAttemptWPF
         }
 
 
-        public News CreateNewsRandomPoster(string name, bool isTrue,double time,double emotionalLevel,double believability,int nPosts=1)
+        public News CreateNewsRandomPoster(string name, bool isTrue,int time,double emotionalLevel,double believability,int nPosts=1)
         {
             News news = new News(this.newsCount,name+newsCount, isTrue,emotionalLevel,believability);
             this.newsList.Add(news);
@@ -162,7 +163,7 @@ namespace ModelAttemptWPF
             return news;
         }
 
-        public void ViewNews( Account account, News news, double time)
+        public void ViewNews( Account account, News news, int time)
         {
             if (accountList[account.ID].HasShared(news) == false)
                 // change this so the probability of sharing decreases exponentially
@@ -193,7 +194,7 @@ namespace ModelAttemptWPF
             }
         }
 
-        public void ViewFeed(Account account, double time)
+        public void ViewFeed(Account account, int time)
         {
             // Create a list of all the posts within the last 30 mins (up to 100) (2 timeslots)
             List<Post> currentFeed = new List<Post>();
@@ -266,7 +267,7 @@ namespace ModelAttemptWPF
             }
         }
 
-        public void CreateFollowsBasedOnPersonality(int defaultFollows)
+        public void CreateFollowsFromPersonality(int defaultFollows)
             //Change this to take a default number of follows
         {
             foreach (Account account in this.accountList)
@@ -276,7 +277,7 @@ namespace ModelAttemptWPF
             }
         }
 
-        public void TimeSlotPasses(double time)
+        public void TimeSlotPasses(int time)
         {
             // Determine which users will check their news feed in this time slot
             double randomDouble = random.NextDouble();
@@ -305,12 +306,12 @@ namespace ModelAttemptWPF
             var line = String.Format("{0},{1},{2}", 0, from, to); // so that the columns match from smallworld path
             followCSV.AppendLine(line);
         }
-        public void SaveFollowCSV()
+        public void SaveFollowCSV(string generalPath)
         {
             string[] lines = followCSV.ToString().Split(Environment.NewLine.ToCharArray());
             File.WriteAllLines(followCSVPath+this.name+".csv", lines);
             string[] allSmallWorld = File.ReadAllLines(smallWorldPath);
-            File.AppendAllLines(followCSVPath+this.name+".csv", allSmallWorld);
+            File.AppendAllLines(generalPath+"follows.csv", allSmallWorld);
 
         }
     }
