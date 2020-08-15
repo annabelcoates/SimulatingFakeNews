@@ -20,7 +20,6 @@ namespace ModelAttemptWPF
         public List<Post> feed= new List<Post>(); // A list of posts that the account's follows have shared
         public List<News> seen = new List<News>(); // a list of all the posts the user has seen
         private Random random= new Random();
-        private int staticTime = 0; // temp variable to handle time
 
         public Person person;
 
@@ -40,15 +39,7 @@ namespace ModelAttemptWPF
                 this.page.Add(newPost);
         }
 
-  
-        public void OutputPage(MainWindow window)
-        {
-                window.GUIAccount.Content = this.person.name + "'s Page \n";
-                foreach(Post post in this.page)
-                {
-                    window.GUIAccount.Content += "post:"+post.news.name +"\n";
-                }
-        }
+
 
         public void Follow(Account followingAccount)
         {

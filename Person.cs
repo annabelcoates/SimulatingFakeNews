@@ -48,23 +48,7 @@ public class Person
         this.DetermineComplexBehaviours(); // set the behavioural parameters based on the personality traits
 	}
 
-    public void DetermineBehaviours()
-    {
-        // Behaviours based on findings from Caci et al. 2014 and Amichai-Hamburger & Vinitzsky 2010
-
-        // neuroticism --> frequent use, conscientiousness --> infrequent use (Caci) 
-        this.freqUse = this.n * 0.75 - (this.c * 0.5); // coefficients are just best guess
-
-        // extraversion --> long sessions (Caci) 
-        this.sessionLength = this.e;
-
-        // extraversion --> larger network (Caci)
-        // conscientiousness --> larger network (AH&V)
-        this.largeNetwork = Math.Min(1, this.e + this.c); // sum the e and the c, but cannot be greater than 1
-
-        // research on likelihood of sharing needed
-        this.sharingFreq =this.e*this.e;
-    }
+    
 
     public void DetermineComplexBehaviours()
     {
@@ -85,7 +69,6 @@ public class Person
             Console.WriteLine(this.name+" sessionLength  below 0: " + freqUse);
         }
         this.largeNetwork = Math.Max(0,(-0.28 * this.c + 0.24 * this.o + 0.47 * this.e - 0.28 * this.a)); // can be larger than 1
-        this.largeNetwork = Math.Sqrt(this.largeNetwork);
         // research on likelihood of sharing needed
         this.sharingFreq = this.e * this.e;
     }
@@ -101,15 +84,15 @@ public class Person
         // how much the news appeals emotionally increases with the person's emotional level and how emotional the news is
         double emotionalFactor = this.n * news.emotionalLevel;
 
-        double believabilityFactor = news.believability -onlineLiteracy;
+        double believabilityFactor = (news.believability/onlineLiteracy);
         //believabilityFactor = 1 - onlineLiteracy;
         // The perceived believability is dependent on the believability of the article and the person's online literacy
         
 
         // According to Pennycook & Rand (2018) failing to identify news is fake is the biggest affector of how likely a person is to believe and therefore share it (partisanship/ political factor is more minor)
 
-        double shareProb = this.sharingFreq * (politicalFactor + emotionalFactor + believabilityFactor) / 3;
-        //Console.WriteLine(this.name+" probability of sharing "+news.name+": " + shareProb);
+        double shareProb = this.sharingFreq *((politicalFactor +emotionalFactor)*believabilityFactor);
+        //Console.WriteLine(this.name+" probability of sharing "+news.name+": "  shareProb);
         // return the likelihood that someone will share the news
         return shareProb;
 
