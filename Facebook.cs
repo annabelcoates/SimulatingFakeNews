@@ -7,7 +7,7 @@ namespace ModelAttemptWPF
     {
         public Facebook(string name):base(name)
         {
-            this.chronology = 500;
+            this.chronology = 200;
         }
 
         public new void CreateRandomMutualFollows(Account account, int nConnections)
