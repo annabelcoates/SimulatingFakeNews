@@ -16,7 +16,7 @@ n=args.n
 k=args.k
 l=int(n/k)
 G = nx.relaxed_caveman_graph(l,k,0)
-write_to_csv(G, "C:/Users/Anni/Documents/Uni/Computer Science/Proj/CSVs and text files/small_world_graph.csv")
+write_to_csv(G, "C:/Users/Anni/Documents/Uni/Computer Science/Proj/CSVs and text files/FacebookUK/small_world_graph.csv")
 #nx.draw(G,with_labels=False,pos=nx.spectral_layout(G),
  #      node_size=10,linewidths=0.1,width=0.01,node_color=range(1000),
   #    cmap=plt.cm.Blues)
