@@ -13,7 +13,7 @@ namespace ModelAttemptWPF
     public class OSN
     {
         public string name;
-        public int chronology = 1000; // the number of timeslots to go back 
+        public int feedTimeFrame = 1000; // the number of timeslots to go back 
 
         private Process process = null; // for python connection
         public string followCSVPath = @"C:\Users\Anni\Documents\Uni\Computer Science\Proj\CSVs and text files\FacebookUK\follows";
@@ -37,7 +37,9 @@ namespace ModelAttemptWPF
         public int nSharedFakeNews = 0;
         public int nSeenFakeNews = 0;
         public List<int> nSharedFakeNewsList = new List<int>() { 0 }; // at t=0, 0 people have seen fake news
-
+        public List<double> fakeShareProbs = new List<double>();
+        public List<double> trueShareProbs = new List<double>();
+        
 
         public OSN(string name)
         {
@@ -72,7 +74,7 @@ namespace ModelAttemptWPF
                 // Make them an account
                 this.NewAccount(person);
             }
-            this.CreateGraphCSV(n.ToString(),k.ToString());
+            //this.CreateGraphCSV(n.ToString(),k.ToString());
         }
 
         public void CreateRandomMutualFollows(Account account,int nConnections)
@@ -170,9 +172,17 @@ namespace ModelAttemptWPF
             {
                 double randomWeightedDouble = random.NextDouble() *(Math.Exp(news.NumberOfTimesViewed(account.person)));
                 // TO do change this back to exponential
-                double assesment = account.person.AssesNews(news);
+                double shareProb = account.person.AssesNews(news);
+                if (news.isTrue)
+                {
+                    trueShareProbs.Add(shareProb);
+                }
+                else
+                {
+                    fakeShareProbs.Add(shareProb);
+                }
                 //Console.WriteLine(account.person.name + " assesed " + news.name +"(b=" +news.believability+", e="+news.emotionalLevel + ") as: " + assesment);
-                if (randomWeightedDouble < assesment)
+                if (randomWeightedDouble < shareProb)
                 {
                     //Console.WriteLine(account.person.name + " shared " + news.name);
                     this.ShareNews(news, account, time);
@@ -203,7 +213,7 @@ namespace ModelAttemptWPF
             {
                 foreach (Post post in followee.page)
                 {
-                    if (time - post.time <= this.chronology & count <100)
+                    if (time - post.time <= this.feedTimeFrame & count <100)
                     {
                         currentFeed.Add(post);
                     }

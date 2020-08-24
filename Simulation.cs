@@ -22,21 +22,16 @@ public class Simulation
 
 
     // whatever is being changed in each simulation run
-    public int nPostsPerTrue;
+    public int feedTimeFrame;
 
-    public Simulation(string versionName, double runSpeed,int nPostsPerTrue,int nRuns=2)
+    public Simulation(string versionName, double runSpeed,int feedTimeFrame,int nRuns=50)
 	{
         this.versionName = versionName;
         this.runSpeed = runSpeed;
-        this.nPostsPerTrue = nPostsPerTrue;
+        this.feedTimeFrame = feedTimeFrame;
+        this.nRuns = nRuns;
 	}
-    public void SimplePopulate(int n)
-    {
-        for(int i=0; i < n; i++)
-        {
-            CreatePerson(0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5); 
-        }
-    }
+
 
     public Person CreatePerson(double o, double c, double e, double a, double n, double PL, double OL)
     {
@@ -75,7 +70,6 @@ public class Simulation
         {
             // assign OCEAN values according to a normal distribution
             double OL = random.NextDouble();
-            Console.WriteLine("OL:" + OL);
            CreatePerson(NormalDistribution(oMean,oStd), NormalDistribution(cMean, cStd), NormalDistribution(eMean, eStd), NormalDistribution(aMean, aStd),
                NormalDistribution(nMean, nStd), NormalDistribution(0.5,0.4), OL);
         }
@@ -126,6 +120,7 @@ public class Simulation
     private void AddDistributedNews(int nFake, int nTrue, OSN osn, double meanEFake = 0.75, double meanETrue = 0.5, double meanBFake = 0.25, double meanBTrue = 0.75)
     {
         double std = 0.1;
+        int nPostsPerTrue = 2;
         for (int i = 0; i < nFake; i++)
         {
             double e = NormalDistribution(meanEFake, std);
