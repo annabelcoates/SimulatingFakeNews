@@ -33,7 +33,6 @@ public class Person
 	{
         this.ID = ID;
         this.name = name;
-        // Make these normalised?
         this.o = o;
         this.c = c;
         this.e = e;
@@ -41,8 +40,6 @@ public class Person
         this.n = n;
 
         this.politicalLeaning = politicalLeaning;
-        //this.onlineLiteracy = onlineLiteracy;
-
         this.onlineLiteracy = onlineLiteracy;
         this.emotionalState = 0.5; // emotional state starts average
         this.DetermineComplexBehaviours(); // set the behavioural parameters based on the personality traits
@@ -53,24 +50,26 @@ public class Person
     public void DetermineComplexBehaviours()
     {
         // From caci et al 2014 path analysis
-        this.freqUse = -0.18 * this.c + 0.12 * this.e - 0.21 * this.a + 0.14 * this.n;
-        this.freqUse += 0.5; // to ensure it is above 0
-        this.freqUse *= this.freqUse; // to reintroduce a contrast in the spread of frequencies
-        if (this.freqUse < 0)
-        {
-            Console.WriteLine(this.name+" freqUse below 0: " + freqUse);
-        }
+        double tempFreqUse = -0.18 * this.c + 0.12 * this.e - 0.21 * this.a + 0.14 * this.n;
+        double minFreqUse = -0.39; // -0.18-0.21
+        double maxFreqUse = 0.26; // 0.12+0.14
+        this.freqUse = (tempFreqUse + minFreqUse)/ (maxFreqUse - minFreqUse);
+
+        // in the experiment the frequency of use and session length were just used unnormalised
+
         
 
-        this.sessionLength = -0.28 * this.c + 0.24 * e + 0.14 * this.n+0.5;
-        this.sessionLength *= this.sessionLength;
-        if (this.sessionLength < 0)
-        {
-            Console.WriteLine(this.name+" sessionLength  below 0: " + freqUse);
-        }
-        this.largeNetwork = Math.Max(0,(-0.28 * this.c + 0.24 * this.o + 0.47 * this.e - 0.28 * this.a)); // can be larger than 1
-        // research on likelihood of sharing needed
-        this.sharingFreq = this.e * this.e;
+
+
+        //double tempSL = -0.16 * this.c + 0.24 * e + 0.14 * this.n+0.5;
+        double tempSL = -0.16 * this.c + 0.24 * e + 0.14 * this.n;
+        double minSL = -0.16; // -0.16
+        double maxSL = 0.38;//
+        this.sessionLength = (tempSL + minSL) / (maxSL - minSL);
+ 
+        this.largeNetwork = Math.Max(0,(0.24 * this.o - 0.28 * this.c + 0.47 * this.e - 0.28 * this.a)); // can be larger than 1
+        // research on likelihood of sharing from amichai- vitinzsky
+        this.sharingFreq = this.e * this.n;
     }
 
 
@@ -91,7 +90,7 @@ public class Person
 
         // According to Pennycook & Rand (2018) failing to identify news is fake is the biggest affector of how likely a person is to believe and therefore share it (partisanship/ political factor is more minor)
 
-        double shareProb = this.sharingFreq *((politicalFactor +emotionalFactor)*believabilityFactor);
+        double shareProb = this.sharingFreq *believabilityFactor*(politicalFactor +emotionalFactor);
         //Console.WriteLine(this.name+" probability of sharing "+news.name+": "  shareProb);
         // return the likelihood that someone will share the news
         return shareProb;

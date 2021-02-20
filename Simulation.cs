@@ -1,8 +1,6 @@
-﻿using Microsoft.Data.Analysis;
-using ModelAttemptWPF;
+﻿using ModelAttemptWPF;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 public class Simulation
 {
@@ -22,13 +20,13 @@ public class Simulation
 
 
     // whatever is being changed in each simulation run
-    public int feedTimeFrame;
+    public double value;
 
-    public Simulation(string versionName, double runSpeed,int feedTimeFrame,int nRuns=50)
+    public Simulation(string versionName, double runSpeed,double value,int nRuns=50)
 	{
         this.versionName = versionName;
         this.runSpeed = runSpeed;
-        this.feedTimeFrame = feedTimeFrame;
+        this.value = value;
         this.nRuns = nRuns;
 	}
 
@@ -56,20 +54,20 @@ public class Simulation
         // Distribution of personality traits for the UK
         //https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4372610/
         // divided b 5 to ensure each is on a 0-1 scale
-        double eMean = 3.24/5.0;//3.24
-        double eStd = 0.82/5.0;//0.82
-        double aMean = 3.74/5.0;
-        double aStd = 0.62/5.0;
-        double cMean = 3.65/5.0;
-        double cStd = 0.7/5.0;
-        double nMean = 2.97/5.0;
-        double nStd = 0.81 / 5.0;
-        double oMean = 3.67 / 5.0;
-        double oStd = 0.64 / 5.0;
+        double eMean = 0.648;// 3.24/5.0;
+        double eStd = 0.164;// 0.82/5.0;
+        double aMean = 0.748;// 3.74/5.0;
+        double aStd = 0.124;// 0.62/5.0;
+        double cMean = 0.73;// 3.65/5.0;
+        double cStd = 0.14;// 0.7/5.0;
+        double nMean = 0.594;// this.nMean;// 2.97/5.0;
+        double nStd = 0.16;// 0.81 / 5.0;
+        double oMean = 0.734;// 3.67 / 5.0;
+        double oStd = 0.128;// 0.64 / 5.0;
         for (int i = 0; i < n; i++)
         {
             // assign OCEAN values according to a normal distribution
-            double OL = random.NextDouble();
+            double OL = NormalDistribution(this.value, 0.1);
            CreatePerson(NormalDistribution(oMean,oStd), NormalDistribution(cMean, cStd), NormalDistribution(eMean, eStd), NormalDistribution(aMean, aStd),
                NormalDistribution(nMean, nStd), NormalDistribution(0.5,0.4), OL);
         }
@@ -103,6 +101,7 @@ public class Simulation
 
     public double NormalDistribution(double mean,double std)
     {
+        // generates a random number between 0 and 1 from a normal distribution
         double randNormal=1.1;
         while (randNormal < 0 | randNormal > 1)
         {
@@ -117,7 +116,7 @@ public class Simulation
         return randNormal;
     }
 
-    private void AddDistributedNews(int nFake, int nTrue, OSN osn, double meanEFake = 0.75, double meanETrue = 0.5, double meanBFake = 0.25, double meanBTrue = 0.75)
+    public void AddDistributedNews(int nFake, int nTrue, OSN osn, double meanEFake = 0.75, double meanETrue = 0.5, double meanBFake = 0.25, double meanBTrue = 0.75)
     {
         double std = 0.1;
         int nPostsPerTrue = 2;

@@ -7,7 +7,7 @@ namespace ModelAttemptWPF
     {
         public Twitter(string name):base(name)
         {
-            this.chronology = 2000;
+            this.feedTimeFrame = 2000;
 
         }
         public void CreateRandomFollows(Account account, int nConnections)
